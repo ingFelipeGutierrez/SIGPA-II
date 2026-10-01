@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGPA - Iniciar sesión</title>
+    <link rel="stylesheet" href="css/comun.css">
+</head>
+<body>
+
+<!-- =========================================================
+     LOGIN
+     RF01: El sistema debe permitir el inicio de sesión mediante
+     credenciales, y dirigir a cada usuario a la carpeta e
+     interfaz que corresponde a su rol.
+
+     Nota: el rol "Coordinador" se eliminó; sus funciones
+     (instituciones receptoras y asignación de estudiantes)
+     ahora las maneja el Director de programa.
+========================================================= -->
+
+<section id="login">
+
+    <div class="login-container">
+
+        <div class="login-left">
+            <div class="login-icon">🎓</div>
+            <div class="logo">SIGPA</div>
+            <h1>Sistema Integral de Gestión de Prácticas Académicas</h1>
+            <p>
+                Organiza, gestiona y realiza seguimiento
+                a las prácticas académicas de manera
+                fácil y eficiente.
+            </p>
+        </div>
+
+        <div class="login-right">
+
+            <h2>Iniciar sesión</h2>
+            <p>Ingresa tus credenciales para acceder a la plataforma.</p>
+
+            <div class="login-error" id="login-error">
+                Usuario o contraseña incorrectos.
+            </div>
+
+            <div class="input-group">
+                <label>Usuario</label>
+                <input type="text" id="usuario" placeholder="Ingrese su usuario">
+            </div>
+
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" placeholder="Ingrese su contraseña">
+            </div>
+
+            <div class="remember">
+                <input type="checkbox"> Recordarme
+            </div>
+
+            <button class="login-button" onclick="iniciarSesion()">
+                Iniciar sesión
+            </button>
+
+            <div class="login-hint">
+                <strong>Usuarios de prueba:</strong><br>
+                estudiante / 123456 &nbsp;·&nbsp; docente / 123456<br>
+                director / 123456
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+
+    /* =========================================================
+       BASE DE USUARIOS (simulada, sin backend).
+    ========================================================= */
+    const usuarios = {
+        "estudiante": { password: "123456", nombre: "Laura Fernández", rol: "Estudiante",           carpeta: "estudiante/estudiante.html" },
+        "docente":    { password: "123456", nombre: "Laura Sánchez",   rol: "Docente Asesor",        carpeta: "docente/docente.html" },
+        "director":   { password: "123456", nombre: "Ricardo Jaime",   rol: "Director de Programa",  carpeta: "director/director.html" }
+    };
+
+    function iniciarSesion() {
+
+        let usuario = document.getElementById("usuario").value.trim();
+        let password = document.getElementById("password").value;
+        let errorBox = document.getElementById("login-error");
+
+        errorBox.style.display = "none";
+
+        if (usuario === "" || password === "") {
+            errorBox.textContent = "Por favor ingrese usuario y contraseña.";
+            errorBox.style.display = "block";
+            return;
+        }
+
+        let datosUsuario = usuarios[usuario];
+
+        if (!datosUsuario || datosUsuario.password !== password) {
+            errorBox.textContent = "Usuario o contraseña incorrectos.";
+            errorBox.style.display = "block";
+            return;
+        }
+
+        sessionStorage.setItem("sigpaUsuario", usuario);
+        sessionStorage.setItem("sigpaNombre", datosUsuario.nombre);
+        sessionStorage.setItem("sigpaRol", datosUsuario.rol);
+
+        window.location.href = datosUsuario.carpeta;
+    }
+
+    document.getElementById("password").addEventListener("keyup", function (evento) {
+        if (evento.key === "Enter") iniciarSesion();
+    });
+
+</script>
+
+</body>
+</html>

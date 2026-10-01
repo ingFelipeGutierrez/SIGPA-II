@@ -1,0 +1,9 @@
+/* =========================================================================
+   SIGPA · director/director.css
+   Color de acento propio del rol Director de Programa. Se carga después
+   de css/comun.css.
+   ========================================================================= */
+
+:root {
+    --acento: #c9820f; /* dorado: color de identidad del rol Director */
+}

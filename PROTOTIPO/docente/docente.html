@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGPA - Panel del Docente Asesor</title>
+    <link rel="stylesheet" href="../css/comun.css">
+    <link rel="stylesheet" href="docente.css">
+</head>
+<body>
+
+<section id="app">
+
+    <!-- ===================== MENÚ LATERAL ===================== -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            🎓 SIGPA
+            <small>Gestión de Prácticas</small>
+        </div>
+        <span class="sidebar-rol">Docente Asesor</span>
+
+        <ul class="menu">
+            <li><button class="active" onclick="mostrarPagina('inicio', this)">🏠 Inicio</button></li>
+            <li><button onclick="mostrarPagina('estudiantes', this)">👥 Mis estudiantes</button></li>
+            <li><button onclick="mostrarPagina('bitacoras', this)">📝 Bitácoras por revisar</button></li>
+            <li><button onclick="mostrarPagina('evaluaciones', this)">⭐ Evaluaciones</button></li>
+            <li><button onclick="mostrarPagina('reportes', this)">📊 Reportes</button></li>
+            <li><button onclick="cerrarSesion()">🚪 Cerrar sesión</button></li>
+        </ul>
+    </aside>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    <main class="main">
+
+        <header class="topbar">
+            <div class="topbar-title">Panel del Docente Asesor</div>
+            <div class="user">
+                <div class="avatar">👤</div>
+                <div>
+                    <strong id="nombre-usuario">Laura Sánchez</strong><br>
+                    <small id="rol-usuario">Docente Asesor</small>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <!-- ============ INICIO ============ -->
+            <div id="inicio" class="page">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                    <p>¡Bienvenida! Este es el resumen de tus estudiantes a cargo.</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card stat-card">
+                        <div class="stat-title">Estudiantes a cargo</div>
+                        <div class="stat-number">4</div>
+                        <div class="stat-link" onclick="mostrarPagina('estudiantes')">Ver estudiantes</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Bitácoras por revisar</div>
+                        <div class="stat-number" id="kpi-pendientes">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('bitacoras')">Revisar ahora</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Horas promedio cumplidas</div>
+                        <div class="stat-number">68%</div>
+                        <div class="stat-link" onclick="mostrarPagina('estudiantes')">Ver detalle</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Reportes recibidos</div>
+                        <div class="stat-number" id="kpi-reportes">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('reportes')">Ver reportes</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title">Últimas bitácoras recibidas</div>
+                        <div class="activity">Laura Fernández<small>Refuerzo de fracciones, grado 6° - 25 mayo 2026</small></div>
+                        <div class="activity">María Paz Osorio<small>Evaluación diagnóstica, grado 7° - 20 mayo 2026</small></div>
+                        <div class="activity">Diego Alarcón<small>Clase de estadística - 19 mayo 2026</small></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Próximas fechas importantes</div>
+                        <div class="activity">Cierre de evaluaciones del corte<small>30 mayo 2026</small></div>
+                        <div class="activity">Reunión con dirección de programa<small>02 junio 2026</small></div>
+                        <div class="activity">Evaluación final de prácticas<small>10 junio 2026</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ MIS ESTUDIANTES ============ -->
+            <div id="estudiantes" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Mis estudiantes</h1>
+                    <p>Consulta el estado y las horas de práctica de cada estudiante asignado.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Estudiante</th><th>Institución receptora</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Laura Fernández</td><td>I.E. Simón Bolívar</td><td>96 / 160 h</td>
+                                <td><span class="badge pending">1 por revisar</span></td>
+                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
+                            </tr>
+                            <tr>
+                                <td>Juan Camilo Rey</td><td>I.E. Técnica del Norte</td><td>140 / 160 h</td>
+                                <td><span class="badge approved">Al día</span></td>
+                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
+                            </tr>
+                            <tr>
+                                <td>María Paz Osorio</td><td>I.E. Simón Bolívar</td><td>70 / 160 h</td>
+                                <td><span class="badge pending">1 por revisar</span></td>
+                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
+                            </tr>
+                            <tr>
+                                <td>Diego Alarcón</td><td>Colegio La Presentación</td><td>112 / 160 h</td>
+                                <td><span class="badge approved">Al día</span></td>
+                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ BITÁCORAS POR REVISAR (RF10) ============ -->
+            <div id="bitacoras" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Bitácoras por revisar</h1>
+                    <p>Aprueba o rechaza cada entrada de bitácora registrada por tus estudiantes.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Estudiante</th><th>Fecha</th><th>Título</th><th>Descripción</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="tabla-bitacoras"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ EVALUACIONES (RF10) ============ -->
+            <div id="evaluaciones" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Registrar evaluación</h1>
+                    <p>Evalúa el desempeño y registra retroalimentación para un estudiante.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Estudiante</label>
+                            <select id="ev-estudiante">
+                                <option>Laura Fernández</option>
+                                <option>Juan Camilo Rey</option>
+                                <option>María Paz Osorio</option>
+                                <option>Diego Alarcón</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Criterio evaluado</label>
+                            <select id="ev-criterio">
+                                <option>Planeación de clase</option>
+                                <option>Manejo de grupo</option>
+                                <option>Comunicación pedagógica</option>
+                                <option>Uso de material didáctico</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Calificación (1.0 - 5.0)</label>
+                            <input type="number" id="ev-calificacion" min="1" max="5" step="0.1" value="4.5">
+                        </div>
+                        <div class="form-group"><label>&nbsp;</label></div>
+                        <div class="form-group full">
+                            <label>Retroalimentación</label>
+                            <textarea id="ev-retro" placeholder="Escribe una observación constructiva para el estudiante..."></textarea>
+                        </div>
+                    </div>
+                    <button class="button-primary" onclick="guardarEvaluacion()">Guardar evaluación</button>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Evaluaciones registradas por ti</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Estudiante</th><th>Criterio</th><th>Calificación</th></tr></thead>
+                        <tbody id="tabla-evaluaciones"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ REPORTES (RF13) ============ -->
+            <div id="reportes" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Reportes</h1>
+                    <p>Genera reportes para la dirección del programa y consulta los que te envían tus estudiantes.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipo de reporte</label>
+                            <select id="rp-tipo">
+                                <option>Cumplimiento de horas por estudiante</option>
+                                <option>Bitácoras aprobadas / pendientes</option>
+                                <option>Evaluaciones registradas</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Fecha inicial</label><input type="date" id="rp-inicio"></div>
+                        <div class="form-group"><label>Fecha final</label><input type="date" id="rp-fin"></div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
+                        </div>
+                    </div>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>📥 Reportes recibidos de tus estudiantes</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Estudiante</th><th>Tipo</th><th>Periodo</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-reportes-recibidos"></tbody>
+                    </table>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Reportes que has enviado a dirección</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Enviado a</th></tr></thead>
+                        <tbody id="tabla-reportes-enviados"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</section>
+
+
+<script>
+
+    /* =========================================================
+       1. SESIÓN
+    ========================================================= */
+    const miNombre = sessionStorage.getItem("sigpaNombre") || "Laura Sánchez";
+    document.getElementById("nombre-usuario").textContent = miNombre;
+    document.getElementById("rol-usuario").textContent = sessionStorage.getItem("sigpaRol") || "Docente Asesor";
+
+    const MI_DIRECTOR = "Ricardo Jaime";
+
+
+    /* =========================================================
+       2. CAPA DE DATOS (compartida con el panel del Estudiante)
+    ========================================================= */
+    function cargar(clave, semilla) {
+        let datos = localStorage.getItem(clave);
+        if (!datos) {
+            localStorage.setItem(clave, JSON.stringify(semilla));
+            return semilla;
+        }
+        return JSON.parse(datos);
+    }
+
+    function guardar(clave, arreglo) {
+        localStorage.setItem(clave, JSON.stringify(arreglo));
+    }
+
+    let bitacoras = cargar("sigpaBitacoras", [
+        { id: 1, estudiante: "Laura Fernández", fecha: "2026-05-10", titulo: "Taller de números primos", descripcion: "Actividad lúdica sobre números primos con material concreto.", horas: 3, estado: "Aprobada" },
+        { id: 2, estudiante: "Laura Fernández", fecha: "2026-05-18", titulo: "Clase de geometría, grado 8°", descripcion: "Introducción a los ángulos internos de un triángulo con regla y transportador.", horas: 4, estado: "Aprobada" },
+        { id: 3, estudiante: "Laura Fernández", fecha: "2026-05-25", titulo: "Refuerzo de fracciones, grado 6°", descripcion: "Taller práctico con material concreto para reforzar la suma de fracciones heterogéneas.", horas: 3, estado: "Pendiente" },
+        { id: 4, estudiante: "María Paz Osorio", fecha: "2026-05-20", titulo: "Evaluación diagnóstica, grado 7°", descripcion: "Falta anexar la rúbrica de evaluación.", horas: 3, estado: "Pendiente" },
+        { id: 5, estudiante: "Juan Camilo Rey", fecha: "2026-05-18", titulo: "Clase de estadística", descripcion: "Recolección y tabulación de datos con el grupo.", horas: 4, estado: "Aprobada" }
+    ]);
+
+    let evaluaciones = cargar("sigpaEvaluaciones", [
+        { id: 1, fecha: "2026-05-15", estudiante: "Laura Fernández", evaluador: "Laura Sánchez", criterio: "Seguimiento", calificacion: "4.5 / 5", observaciones: "Buen desarrollo de las actividades." },
+        { id: 2, fecha: "2026-05-10", estudiante: "Laura Fernández", evaluador: "Ricardo Jaime", criterio: "Evaluación de dirección", calificacion: "4.0 / 5", observaciones: "Cumple con los objetivos establecidos." }
+    ]);
+
+    let reportes = cargar("sigpaReportes", []);
+
+
+    /* =========================================================
+       3. RENDER DE TABLAS
+    ========================================================= */
+    function badge(estado) {
+        let clase = estado === "Aprobada" ? "approved" : estado === "Rechazada" ? "rejected" : "pending";
+        return '<span class="badge ' + clase + '">' + estado + '</span>';
+    }
+
+    function formatearFecha(iso) {
+        let partes = iso.split("-");
+        return partes[2] + "/" + partes[1] + "/" + partes[0];
+    }
+
+    function pintarBitacoras() {
+        let pendientes = bitacoras.filter(function (b) { return b.estado === "Pendiente"; });
+        document.getElementById("kpi-pendientes").textContent = pendientes.length;
+
+        document.getElementById("tabla-bitacoras").innerHTML = bitacoras.map(function (b) {
+            let acciones = b.estado === "Pendiente"
+                ? '<button class="button-primary" onclick="revisarBitacora(' + b.id + ', \'Aprobada\')">Aprobar</button> ' +
+                  '<button class="button-secondary" onclick="revisarBitacora(' + b.id + ', \'Rechazada\')">Rechazar</button>'
+                : '<button class="button-secondary" onclick="verBitacora(' + b.id + ')">👁️ Ver</button>';
+
+            return "<tr>" +
+                "<td>" + b.estudiante + "</td>" +
+                "<td>" + formatearFecha(b.fecha) + "</td>" +
+                "<td>" + b.titulo + "</td>" +
+                "<td>" + b.descripcion + "</td>" +
+                "<td>" + b.horas + "</td>" +
+                "<td>" + badge(b.estado) + "</td>" +
+                "<td>" + acciones + "</td>" +
+                "</tr>";
+        }).join("");
+    }
+
+    function verBitacora(id) {
+        let b = bitacoras.find(function (x) { return x.id === id; });
+        if (!b) return;
+        alert("Bitácora de " + b.estudiante + ": " + b.titulo + "\nEstado: " + b.estado + "\n\n" + b.descripcion);
+    }
+
+    function pintarEvaluaciones() {
+        let mias = evaluaciones.filter(function (ev) { return ev.evaluador === miNombre; });
+        document.getElementById("tabla-evaluaciones").innerHTML = mias.map(function (ev) {
+            return "<tr><td>" + formatearFecha(ev.fecha) + "</td><td>" + ev.estudiante + "</td><td>" + ev.criterio + "</td><td>" + ev.calificacion + "</td></tr>";
+        }).join("");
+    }
+
+    function pintarReportes() {
+        let recibidos = reportes.filter(function (r) { return r.destinatarioRol === "docente"; });
+        document.getElementById("kpi-reportes").textContent = recibidos.length;
+
+        document.getElementById("tabla-reportes-recibidos").innerHTML = recibidos.map(function (r) {
+            return "<tr>" +
+                "<td>" + formatearFecha(r.fecha) + "</td>" +
+                "<td>" + r.generadoPor + "</td>" +
+                "<td>" + r.tipo + "</td>" +
+                "<td>" + r.periodo + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"alert('Abriendo reporte de ' + '" + r.generadoPor + "'+'...')\">👁️ Ver</button></td>" +
+                "</tr>";
+        }).join("");
+
+        let enviados = reportes.filter(function (r) { return r.generadoPor === miNombre; });
+        document.getElementById("tabla-reportes-enviados").innerHTML = enviados.map(function (r) {
+            return "<tr><td>" + formatearFecha(r.fecha) + "</td><td>" + r.tipo + "</td><td>" + r.periodo + "</td><td>" + r.destinatarioNombre + "</td></tr>";
+        }).join("");
+    }
+
+
+    /* =========================================================
+       4. ACCIONES
+    ========================================================= */
+
+    // RF10: aprobar / rechazar una bitácora
+    function revisarBitacora(id, nuevoEstado) {
+        let b = bitacoras.find(function (x) { return x.id === id; });
+        if (!b) return;
+
+        b.estado = nuevoEstado;
+        guardar("sigpaBitacoras", bitacoras);
+
+        alert("Bitácora de " + b.estudiante + " (\"" + b.titulo + "\") marcada como " + nuevoEstado.toLowerCase() + ".");
+        pintarBitacoras();
+    }
+
+    // RF10: guardar evaluación (queda visible para el estudiante en su propio panel)
+    function guardarEvaluacion() {
+        let estudiante = document.getElementById("ev-estudiante").value;
+        let criterio = document.getElementById("ev-criterio").value;
+        let calificacion = document.getElementById("ev-calificacion").value;
+        let retro = document.getElementById("ev-retro").value.trim();
+
+        if (!calificacion || !retro) {
+            alert("Por favor ingresa la calificación y la retroalimentación.");
+            return;
+        }
+
+        let hoy = new Date().toISOString().split("T")[0];
+        evaluaciones.push({
+            id: Date.now(),
+            fecha: hoy,
+            estudiante: estudiante,
+            evaluador: miNombre,
+            criterio: criterio,
+            calificacion: Number(calificacion).toFixed(1) + " / 5",
+            observaciones: retro
+        });
+        guardar("sigpaEvaluaciones", evaluaciones);
+
+        alert("Evaluación guardada correctamente y notificada a " + estudiante + ".");
+
+        document.getElementById("ev-retro").value = "";
+        pintarEvaluaciones();
+    }
+
+    // RF13: generar reporte para dirección
+    function generarReporte() {
+        let tipo = document.getElementById("rp-tipo").value;
+        let inicio = document.getElementById("rp-inicio").value;
+        let fin = document.getElementById("rp-fin").value;
+
+        if (!inicio || !fin) {
+            alert("Selecciona la fecha inicial y la fecha final del reporte.");
+            return;
+        }
+
+        let hoy = new Date().toISOString().split("T")[0];
+        reportes.push({
+            id: Date.now(),
+            fecha: hoy,
+            tipo: tipo,
+            periodo: formatearFecha(inicio) + " - " + formatearFecha(fin),
+            generadoPor: miNombre,
+            generadoPorRol: "docente",
+            destinatarioRol: "director",
+            destinatarioNombre: MI_DIRECTOR
+        });
+        guardar("sigpaReportes", reportes);
+
+        alert("Reporte generado correctamente.\nSe envió una copia al director de programa, " + MI_DIRECTOR + ".");
+
+        document.getElementById("rp-inicio").value = "";
+        document.getElementById("rp-fin").value = "";
+        pintarReportes();
+    }
+
+
+    /* =========================================================
+       5. NAVEGACIÓN
+    ========================================================= */
+    function mostrarPagina(nombre, boton) {
+        document.querySelectorAll(".page").forEach(function (p) { p.style.display = "none"; });
+        let pagina = document.getElementById(nombre);
+        if (pagina) pagina.style.display = "block";
+
+        document.querySelectorAll(".menu button").forEach(function (b) { b.classList.remove("active"); });
+        if (boton) boton.classList.add("active");
+    }
+
+    function cerrarSesion() {
+        sessionStorage.clear();
+        window.location.href = "../index.html";
+    }
+
+
+    /* =========================================================
+       6. PRIMER DIBUJADO
+    ========================================================= */
+    pintarBitacoras();
+    pintarEvaluaciones();
+    pintarReportes();
+
+</script>
+
+</body>
+</html>

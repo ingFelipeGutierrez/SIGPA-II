@@ -1,0 +1,9 @@
+/* =========================================================================
+   SIGPA · docente/docente.css
+   Color de acento propio del rol Docente Asesor. Se carga después de
+   css/comun.css.
+   ========================================================================= */
+
+:root {
+    --acento: #1f9d63; /* verde: color de identidad del rol Docente Asesor */
+}

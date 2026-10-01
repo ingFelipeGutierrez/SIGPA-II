@@ -1,0 +1,533 @@
+/* =========================================================================
+   SIGPA · css/comun.css
+   Estilos COMPARTIDOS por todas las páginas del proyecto (login y los
+   cuatro paneles de actor). Cada carpeta de actor tiene, además, su propio
+   archivo CSS (por ejemplo /docente/docente.css) que se carga DESPUÉS de
+   este y que solo ajusta el color de acento y detalles particulares de
+   ese rol, para que cada actor se sienta visualmente identificable sin
+   duplicar todo el código en cada carpeta.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   VARIABLES DE DISEÑO
+   ------------------------------------------------------------------------- */
+:root {
+    --azul-oscuro: #173f78;   /* color base de marca (sidebar, login) */
+    --azul: #2864c7;          /* color de acento por defecto */
+    --acento: var(--azul);    /* cada rol lo sobreescribe en su propio CSS */
+    --fondo: #f4f6f9;
+    --texto: #26354d;
+    --gris-texto: #777;
+    --borde: #e2e6eb;
+}
+
+/* -------------------------------------------------------------------------
+   CONFIGURACIÓN GENERAL
+   ------------------------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background-color: var(--fondo);
+    color: var(--texto);
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+}
+
+/* -------------------------------------------------------------------------
+   LOGIN (usado únicamente por index.html, en la raíz del proyecto)
+   ------------------------------------------------------------------------- */
+#login {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eef2f7;
+}
+
+.login-container {
+    width: 900px;
+    max-width: 95%;
+    min-height: 520px;
+    display: flex;
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.12);
+}
+
+.login-left {
+    width: 45%;
+    background-color: var(--azul-oscuro);
+    color: white;
+    padding: 50px 35px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.login-left h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.login-left p {
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.login-icon {
+    font-size: 70px;
+    margin-bottom: 20px;
+}
+
+.login-right {
+    width: 55%;
+    padding: 55px;
+}
+
+.login-right h2 {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+.login-right > p {
+    color: var(--gris-texto);
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #d5dbe3;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+}
+
+.login-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--azul);
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.login-button:hover {
+    filter: brightness(1.08);
+}
+
+.remember {
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.login-hint {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: var(--fondo);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--gris-texto);
+    line-height: 1.6;
+}
+
+.login-error {
+    display: none;
+    margin-bottom: 15px;
+    padding: 10px 13px;
+    background-color: #fdeaea;
+    color: #b13030;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* -------------------------------------------------------------------------
+   ESTRUCTURA GENERAL DE UN PANEL (sidebar + topbar + contenido)
+   Usada por las cuatro carpetas de actor: estudiante, docente,
+   coordinador y director.
+   ------------------------------------------------------------------------- */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 230px;
+    height: 100vh;
+    background-color: var(--azul-oscuro);
+    color: white;
+    padding: 20px 15px;
+    overflow-y: auto;
+}
+
+.sidebar-logo {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.sidebar-logo small {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+/* Etiqueta del rol, la fija cada actor con su color de acento */
+.sidebar-rol {
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 10px;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 25px;
+}
+
+.menu {
+    list-style: none;
+}
+
+.menu li {
+    margin-bottom: 6px;
+}
+
+.menu button {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.menu button:hover,
+.menu button.active {
+    background-color: var(--acento);
+}
+
+.main {
+    margin-left: 230px;
+    min-height: 100vh;
+}
+
+.topbar {
+    height: 65px;
+    background-color: white;
+    border-bottom: 1px solid var(--borde);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.topbar-title {
+    font-size: 18px;
+    font-weight: bold;
+    border-left: 4px solid var(--acento);
+    padding-left: 12px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
+    background-color: #dce8f8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content {
+    padding: 30px;
+}
+
+.page-title {
+    margin-bottom: 25px;
+}
+
+.page-title h1 {
+    font-size: 27px;
+    margin-bottom: 7px;
+}
+
+.page-title p {
+    color: var(--gris-texto);
+    font-size: 14px;
+}
+
+/* -------------------------------------------------------------------------
+   TARJETAS DE INDICADORES (KPI)
+   ------------------------------------------------------------------------- */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background-color: white;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.stat-card {
+    min-height: 125px;
+    border-top: 3px solid var(--acento);
+}
+
+.stat-title {
+    color: var(--gris-texto);
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.stat-link {
+    color: var(--acento);
+    font-size: 12px;
+}
+
+/* -------------------------------------------------------------------------
+   CONTENEDORES DE DOS COLUMNAS Y ACTIVIDAD RECIENTE
+   ------------------------------------------------------------------------- */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.section-title {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.activity {
+    padding: 13px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.activity:last-child {
+    border-bottom: none;
+}
+
+.activity small {
+    display: block;
+    color: #888;
+    margin-top: 5px;
+}
+
+/* -------------------------------------------------------------------------
+   TABLAS
+   ------------------------------------------------------------------------- */
+.table-container {
+    background-color: white;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #f5f7fa;
+    text-align: left;
+    padding: 13px;
+    font-size: 13px;
+}
+
+td {
+    padding: 13px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+}
+
+/* -------------------------------------------------------------------------
+   ETIQUETAS DE ESTADO (badges)
+   ------------------------------------------------------------------------- */
+.badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.approved { background-color: #dff4e7; color: #237744; }
+.pending  { background-color: #fff0d5; color: #9a6500; }
+.rejected { background-color: #fdeaea; color: #b13030; }
+.info     { background-color: #e3ecfb; color: var(--azul); }
+
+/* -------------------------------------------------------------------------
+   BOTONES
+   ------------------------------------------------------------------------- */
+.button-primary {
+    background-color: var(--acento);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 13px;
+}
+
+.button-primary:hover {
+    filter: brightness(1.08);
+}
+
+.button-secondary {
+    background-color: white;
+    color: var(--acento);
+    border: 1px solid var(--acento);
+    border-radius: 5px;
+    padding: 9px 15px;
+    font-size: 13px;
+}
+
+.button-secondary:hover {
+    background-color: var(--fondo);
+}
+
+/* -------------------------------------------------------------------------
+   FORMULARIOS
+   ------------------------------------------------------------------------- */
+.form-card {
+    background-color: white;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group.full {
+    grid-column: 1 / 3;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #d6dce5;
+    border-radius: 5px;
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* -------------------------------------------------------------------------
+   BARRA DE PROGRESO (horas de práctica)
+   ------------------------------------------------------------------------- */
+.progress {
+    width: 100%;
+    height: 12px;
+    background-color: #e8edf3;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--acento);
+}
+
+.hours-number {
+    font-size: 35px;
+    font-weight: bold;
+}
+
+/* -------------------------------------------------------------------------
+   RESPONSIVE
+   ------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .sidebar { width: 190px; }
+    .main { margin-left: 190px; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 650px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cards { grid-template-columns: 1fr; }
+    .login-container { flex-direction: column; width: 95%; min-height: auto; }
+    .login-left { width: 100%; padding: 30px; }
+    .login-right { width: 100%; padding: 30px; }
+}

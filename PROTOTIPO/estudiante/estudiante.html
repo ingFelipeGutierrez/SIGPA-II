@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGPA - Panel del Estudiante</title>
+    <link rel="stylesheet" href="../css/comun.css">
+    <link rel="stylesheet" href="estudiante.css">
+</head>
+<body>
+
+<section id="app">
+
+    <!-- ===================== MENÚ LATERAL ===================== -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            🎓 SIGPA
+            <small>Gestión de Prácticas</small>
+        </div>
+        <span class="sidebar-rol">Estudiante</span>
+
+        <ul class="menu">
+            <li><button class="active" onclick="mostrarPagina('inicio', this)">🏠 Inicio</button></li>
+            <li><button onclick="mostrarPagina('practica', this)">📋 Mi práctica</button></li>
+            <li><button onclick="mostrarPagina('bitacoras', this)">📝 Bitácoras</button></li>
+            <li><button onclick="mostrarPagina('evidencias', this)">📎 Evidencias</button></li>
+            <li><button onclick="mostrarPagina('horas', this)">⏱ Horas</button></li>
+            <li><button onclick="mostrarPagina('evaluaciones', this)">⭐ Evaluaciones</button></li>
+            <li><button onclick="mostrarPagina('reportes', this)">📊 Reportes</button></li>
+            <li><button onclick="cerrarSesion()">🚪 Cerrar sesión</button></li>
+        </ul>
+    </aside>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    <main class="main">
+
+        <header class="topbar">
+            <div class="topbar-title">Panel del Estudiante</div>
+            <div class="user">
+                <div class="avatar">👤</div>
+                <div>
+                    <strong id="nombre-usuario">Laura Fernández</strong><br>
+                    <small id="rol-usuario">Estudiante</small>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <!-- ============ INICIO ============ -->
+            <div id="inicio" class="page">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                    <p>¡Bienvenida! Este es el resumen de tu práctica académica.</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card stat-card">
+                        <div class="stat-title">Práctica asignada</div>
+                        <div class="stat-number">1</div>
+                        <div class="stat-link" onclick="mostrarPagina('practica')">Ver práctica</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Horas cumplidas</div>
+                        <div class="stat-number">96 / 160</div>
+                        <div class="stat-link" onclick="mostrarPagina('horas')">Ver horas</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Bitácoras registradas</div>
+                        <div class="stat-number" id="kpi-bitacoras">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('bitacoras')">Ver bitácoras</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Evidencias</div>
+                        <div class="stat-number" id="kpi-evidencias">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('evidencias')">Ver evidencias</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title">Últimas actividades</div>
+                        <div class="activity">Registro de bitácora<small>Refuerzo de fracciones, grado 6° - 25 mayo 2026</small></div>
+                        <div class="activity">Subida de evidencia<small>Planeación de clase - 18 mayo 2026</small></div>
+                        <div class="activity">Evaluación recibida<small>Docente asesor - 15 mayo 2026</small></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Próximas fechas importantes</div>
+                        <div class="activity">Entrega de informe final<small>30 mayo 2026</small></div>
+                        <div class="activity">Evaluación final<small>05 junio 2026</small></div>
+                        <div class="activity">Cierre de práctica<small>10 junio 2026</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ MI PRÁCTICA ============ -->
+            <div id="practica" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Mi práctica</h1>
+                    <p>Consulta la información de tu práctica asignada.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Institución Educativa Simón Bolívar</h3><br>
+                        <p><strong>Programa:</strong> Licenciatura en Matemáticas</p>
+                        <p><strong>Docente asesor:</strong> Laura Sánchez</p>
+                        <p><strong>Director de programa:</strong> Ricardo Jaime</p>
+                        <p><strong>Fecha inicio:</strong> 10 marzo 2026</p>
+                        <p><strong>Fecha fin:</strong> 10 junio 2026</p><br>
+                        <span class="badge approved">Activa</span>
+                    </div>
+                    <div class="card">
+                        <h3>Progreso de la práctica</h3><br>
+                        <strong>96 / 160 horas</strong>
+                        <div class="progress"><div class="progress-bar" style="width:60%"></div></div><br>
+                        <button class="button-primary" onclick="mostrarPagina('horas')">Ver plan de práctica</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ BITÁCORAS (RF07) ============ -->
+            <div id="bitacoras" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Bitácoras</h1>
+                    <p>Consulta y registra las actividades realizadas durante tu práctica.</p>
+                </div>
+
+                <div class="table-container">
+                    <div style="text-align:right; margin-bottom:15px">
+                        <button class="button-primary" onclick="mostrarPagina('nueva-bitacora')">+ Nueva bitácora</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Fecha</th><th>Título</th><th>Descripción</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="tabla-bitacoras"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ NUEVA BITÁCORA ============ -->
+            <div id="nueva-bitacora" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Nueva bitácora</h1>
+                    <p>Registra una nueva actividad realizada durante tu práctica.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="nb-fecha">
+                        </div>
+                        <div class="form-group">
+                            <label>Horas dedicadas</label>
+                            <input type="number" id="nb-horas" placeholder="Ej: 4">
+                        </div>
+                        <div class="form-group full">
+                            <label>Título</label>
+                            <input type="text" id="nb-titulo" placeholder="Ej: Clase sobre funciones">
+                        </div>
+                        <div class="form-group full">
+                            <label>Descripción de la actividad</label>
+                            <textarea id="nb-descripcion" placeholder="Describe detalladamente la actividad realizada..."></textarea>
+                        </div>
+                    </div>
+                    <button class="button-secondary" onclick="cancelarBitacora()">Cancelar</button>
+                    <button class="button-primary" onclick="guardarBitacora()">Guardar</button>
+                </div>
+            </div>
+
+            <!-- ============ EVIDENCIAS (RF08) ============ -->
+            <div id="evidencias" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Evidencias</h1>
+                    <p>Consulta y registra evidencias de las actividades realizadas.</p>
+                </div>
+
+                <div class="table-container">
+                    <div style="text-align:right; margin-bottom:15px">
+                        <button class="button-primary" onclick="mostrarFormEvidencia()">+ Subir evidencia</button>
+                    </div>
+
+                    <!-- Formulario oculto que aparece al pulsar "+ Subir evidencia" -->
+                    <div class="form-card" id="form-evidencia" style="display:none; margin-bottom:18px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Título</label>
+                                <input type="text" id="ev-titulo" placeholder="Ej: Planeación de clase">
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo</label>
+                                <select id="ev-tipo">
+                                    <option>Documento</option>
+                                    <option>Presentación</option>
+                                    <option>Imagen</option>
+                                    <option>Video</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Archivo</label>
+                                <input type="file" id="ev-archivo">
+                            </div>
+                        </div>
+                        <button class="button-secondary" onclick="cancelarEvidencia()">Cancelar</button>
+                        <button class="button-primary" onclick="guardarEvidencia()">Guardar evidencia</button>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr><th>Fecha</th><th>Título</th><th>Tipo</th><th>Archivo</th><th>Estado</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="tabla-evidencias"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ HORAS (RF09) ============ -->
+            <div id="horas" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Horas de práctica</h1>
+                    <p>Consulta el avance de las horas realizadas.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Resumen de horas</h3><br>
+                        <div class="hours-number">96</div>
+                        <p>Horas cumplidas de 160 requeridas</p>
+                        <div class="progress"><div class="progress-bar" style="width:60%"></div></div>
+                    </div>
+                    <div class="card">
+                        <h3>Detalle</h3><br>
+                        <p>Horas cumplidas: <strong>96</strong></p>
+                        <p>Horas requeridas: <strong>160</strong></p>
+                        <p>Horas pendientes: <strong>64</strong></p>
+                        <p>Porcentaje: <strong>60%</strong></p>
+                    </div>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Registro de horas (según bitácoras aprobadas)</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Actividad</th><th>Horas</th><th>Registrado por</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-horas"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ EVALUACIONES (RF11) ============ -->
+            <div id="evaluaciones" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Evaluaciones</h1>
+                    <p>Consulta las evaluaciones y retroalimentaciones recibidas.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Evaluador</th><th>Criterio</th><th>Calificación</th><th>Observaciones</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-evaluaciones"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ REPORTES (RF13) ============ -->
+            <div id="reportes" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Reportes</h1>
+                    <p>Genera y consulta información relacionada con tu práctica. Al generar un reporte, se envía automáticamente una copia a tu docente asesor.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipo de reporte</label>
+                            <select id="rp-tipo">
+                                <option>Reporte de horas</option>
+                                <option>Reporte de bitácoras</option>
+                                <option>Reporte de evidencias</option>
+                                <option>Reporte de evaluaciones</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Fecha inicial</label><input type="date" id="rp-inicio"></div>
+                        <div class="form-group"><label>Fecha final</label><input type="date" id="rp-fin"></div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
+                        </div>
+                    </div>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Reportes generados</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Generado por</th><th>Enviado a</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-reportes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</section>
+
+
+<script>
+
+    /* =========================================================
+       1. SESIÓN
+    ========================================================= */
+    const miNombre = sessionStorage.getItem("sigpaNombre") || "Laura Fernández";
+    document.getElementById("nombre-usuario").textContent = miNombre;
+    document.getElementById("rol-usuario").textContent = sessionStorage.getItem("sigpaRol") || "Estudiante";
+
+    const MI_DOCENTE = "Laura Sánchez"; // docente asesor asignado a este estudiante
+
+
+    /* =========================================================
+       2. CAPA DE DATOS (localStorage)
+       Estos mismos arreglos también los lee/escribe el panel del
+       Docente, para que aprobar/rechazar y los reportes se vean
+       reflejados de un panel a otro sin necesidad de un backend.
+    ========================================================= */
+    function cargar(clave, semilla) {
+        let datos = localStorage.getItem(clave);
+        if (!datos) {
+            localStorage.setItem(clave, JSON.stringify(semilla));
+            return semilla;
+        }
+        return JSON.parse(datos);
+    }
+
+    function guardar(clave, arreglo) {
+        localStorage.setItem(clave, JSON.stringify(arreglo));
+    }
+
+    let bitacoras = cargar("sigpaBitacoras", [
+        { id: 1, estudiante: "Laura Fernández", fecha: "2026-05-10", titulo: "Taller de números primos", descripcion: "Actividad lúdica sobre números primos con material concreto.", horas: 3, estado: "Aprobada" },
+        { id: 2, estudiante: "Laura Fernández", fecha: "2026-05-18", titulo: "Clase de geometría, grado 8°", descripcion: "Introducción a los ángulos internos de un triángulo con regla y transportador.", horas: 4, estado: "Aprobada" },
+        { id: 3, estudiante: "Laura Fernández", fecha: "2026-05-25", titulo: "Refuerzo de fracciones, grado 6°", descripcion: "Taller práctico con material concreto para reforzar la suma de fracciones heterogéneas.", horas: 3, estado: "Pendiente" },
+        { id: 4, estudiante: "María Paz Osorio", fecha: "2026-05-20", titulo: "Evaluación diagnóstica, grado 7°", descripcion: "Falta anexar la rúbrica de evaluación.", horas: 3, estado: "Pendiente" },
+        { id: 5, estudiante: "Juan Camilo Rey", fecha: "2026-05-18", titulo: "Clase de estadística", descripcion: "Recolección y tabulación de datos con el grupo.", horas: 4, estado: "Aprobada" }
+    ]);
+
+    let evidencias = cargar("sigpaEvidencias", [
+        { id: 1, estudiante: "Laura Fernández", fecha: "2026-05-20", titulo: "Planeación de clase", tipo: "Documento", archivo: "planeacion_clase.pdf", estado: "Aprobada" },
+        { id: 2, estudiante: "Laura Fernández", fecha: "2026-05-18", titulo: "Material didáctico", tipo: "Presentación", archivo: "material.pptx", estado: "Aprobada" },
+        { id: 3, estudiante: "Laura Fernández", fecha: "2026-05-15", titulo: "Fotografías actividad", tipo: "Imagen", archivo: "actividad.zip", estado: "Pendiente" }
+    ]);
+
+    let evaluaciones = cargar("sigpaEvaluaciones", [
+        { id: 1, fecha: "2026-05-15", estudiante: "Laura Fernández", evaluador: "Laura Sánchez", criterio: "Seguimiento", calificacion: "4.5 / 5", observaciones: "Buen desarrollo de las actividades." },
+        { id: 2, fecha: "2026-05-10", estudiante: "Laura Fernández", evaluador: "Ricardo Jaime", criterio: "Evaluación de dirección", calificacion: "4.0 / 5", observaciones: "Cumple con los objetivos establecidos." }
+    ]);
+
+    let reportes = cargar("sigpaReportes", []); // bandeja compartida entre roles
+
+
+    /* =========================================================
+       3. RENDER DE TABLAS
+    ========================================================= */
+    function badge(estado) {
+        let clase = estado === "Aprobada" ? "approved" : estado === "Rechazada" ? "rejected" : "pending";
+        return '<span class="badge ' + clase + '">' + estado + '</span>';
+    }
+
+    function pintarBitacoras() {
+        let mias = bitacoras.filter(function (b) { return b.estudiante === miNombre; });
+        document.getElementById("kpi-bitacoras").textContent = mias.length;
+
+        document.getElementById("tabla-bitacoras").innerHTML = mias.map(function (b) {
+            return "<tr>" +
+                "<td>" + formatearFecha(b.fecha) + "</td>" +
+                "<td>" + b.titulo + "</td>" +
+                "<td>" + b.descripcion + "</td>" +
+                "<td>" + b.horas + "</td>" +
+                "<td>" + badge(b.estado) + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"verBitacora(" + b.id + ")\">👁️ Ver</button></td>" +
+                "</tr>";
+        }).join("");
+
+        pintarHoras(mias);
+    }
+
+    function pintarHoras(mias) {
+        document.getElementById("tabla-horas").innerHTML = mias
+            .filter(function (b) { return b.estado === "Aprobada"; })
+            .map(function (b) {
+                return "<tr><td>" + formatearFecha(b.fecha) + "</td><td>" + b.titulo + "</td><td>" + b.horas + "</td><td>" + miNombre + "</td><td>" + badge(b.estado) + "</td></tr>";
+            }).join("");
+    }
+
+    function pintarEvidencias() {
+        let mias = evidencias.filter(function (e) { return e.estudiante === miNombre; });
+        document.getElementById("kpi-evidencias").textContent = mias.length;
+
+        document.getElementById("tabla-evidencias").innerHTML = mias.map(function (e) {
+            return "<tr>" +
+                "<td>" + formatearFecha(e.fecha) + "</td>" +
+                "<td>" + e.titulo + "</td>" +
+                "<td>" + e.tipo + "</td>" +
+                "<td>" + e.archivo + "</td>" +
+                "<td>" + badge(e.estado) + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"descargarEvidencia('" + e.archivo + "')\">⬇️ Descargar</button></td>" +
+                "</tr>";
+        }).join("");
+    }
+
+    function pintarEvaluaciones() {
+        let mias = evaluaciones.filter(function (ev) { return ev.estudiante === miNombre; });
+        document.getElementById("tabla-evaluaciones").innerHTML = mias.map(function (ev, i) {
+            return "<tr>" +
+                "<td>" + formatearFecha(ev.fecha) + "</td>" +
+                "<td>" + ev.evaluador + "</td>" +
+                "<td>" + ev.criterio + "</td>" +
+                "<td>" + ev.calificacion + "</td>" +
+                "<td>" + ev.observaciones + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"verEvaluacion(" + i + ")\">👁️ Ver</button></td>" +
+                "</tr>";
+        }).join("");
+    }
+
+    function pintarReportes() {
+        let mios = reportes.filter(function (r) { return r.generadoPor === miNombre; });
+        document.getElementById("tabla-reportes").innerHTML = mios.map(function (r) {
+            return "<tr>" +
+                "<td>" + formatearFecha(r.fecha) + "</td>" +
+                "<td>" + r.tipo + "</td>" +
+                "<td>" + r.periodo + "</td>" +
+                "<td>" + r.generadoPor + "</td>" +
+                "<td>" + r.destinatarioNombre + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"alert('Descargando ' + '" + r.tipo + "'+'...')\">⬇️ Descargar</button></td>" +
+                "</tr>";
+        }).join("");
+    }
+
+    function formatearFecha(iso) {
+        let partes = iso.split("-");
+        return partes[2] + "/" + partes[1] + "/" + partes[0];
+    }
+
+
+    /* =========================================================
+       4. ACCIONES (todas guardan en localStorage y refrescan)
+    ========================================================= */
+
+    // ---- Bitácoras ----
+    function guardarBitacora() {
+        let fecha = document.getElementById("nb-fecha").value;
+        let horas = document.getElementById("nb-horas").value;
+        let titulo = document.getElementById("nb-titulo").value.trim();
+        let descripcion = document.getElementById("nb-descripcion").value.trim();
+
+        if (!fecha || !horas || !titulo || !descripcion) {
+            alert("Por favor completa todos los campos antes de guardar.");
+            return;
+        }
+
+        bitacoras.push({
+            id: Date.now(),
+            estudiante: miNombre,
+            fecha: fecha,
+            titulo: titulo,
+            descripcion: descripcion,
+            horas: Number(horas),
+            estado: "Pendiente"
+        });
+        guardar("sigpaBitacoras", bitacoras);
+
+        alert("Bitácora guardada correctamente. Quedó pendiente de revisión por tu docente asesor, " + MI_DOCENTE + ".");
+
+        document.getElementById("nb-fecha").value = "";
+        document.getElementById("nb-horas").value = "";
+        document.getElementById("nb-titulo").value = "";
+        document.getElementById("nb-descripcion").value = "";
+
+        pintarBitacoras();
+        mostrarPagina("bitacoras");
+    }
+
+    function cancelarBitacora() {
+        document.getElementById("nb-fecha").value = "";
+        document.getElementById("nb-horas").value = "";
+        document.getElementById("nb-titulo").value = "";
+        document.getElementById("nb-descripcion").value = "";
+        mostrarPagina("bitacoras");
+    }
+
+    function verBitacora(id) {
+        let b = bitacoras.find(function (x) { return x.id === id; });
+        if (!b) return;
+        alert("Bitácora: " + b.titulo + "\nFecha: " + formatearFecha(b.fecha) + "\nHoras: " + b.horas + "\nEstado: " + b.estado + "\n\n" + b.descripcion);
+    }
+
+    // ---- Evidencias ----
+    function mostrarFormEvidencia() {
+        document.getElementById("form-evidencia").style.display = "block";
+    }
+
+    function cancelarEvidencia() {
+        document.getElementById("form-evidencia").style.display = "none";
+        document.getElementById("ev-titulo").value = "";
+        document.getElementById("ev-archivo").value = "";
+    }
+
+    function guardarEvidencia() {
+        let titulo = document.getElementById("ev-titulo").value.trim();
+        let tipo = document.getElementById("ev-tipo").value;
+        let archivoInput = document.getElementById("ev-archivo");
+        let archivo = archivoInput.files.length ? archivoInput.files[0].name : "sin_nombre.archivo";
+
+        if (!titulo) {
+            alert("Por favor ingresa un título para la evidencia.");
+            return;
+        }
+
+        let hoy = new Date().toISOString().split("T")[0];
+        evidencias.push({ id: Date.now(), estudiante: miNombre, fecha: hoy, titulo: titulo, tipo: tipo, archivo: archivo, estado: "Pendiente" });
+        guardar("sigpaEvidencias", evidencias);
+
+        alert("Evidencia subida correctamente. Quedó pendiente de revisión.");
+        cancelarEvidencia();
+        pintarEvidencias();
+    }
+
+    function descargarEvidencia(nombreArchivo) {
+        alert("Descargando " + nombreArchivo + "...");
+    }
+
+    // ---- Evaluaciones ----
+    function verEvaluacion(indice) {
+        let mias = evaluaciones.filter(function (ev) { return ev.estudiante === miNombre; });
+        let ev = mias[indice];
+        if (!ev) return;
+        alert("Evaluación de " + ev.evaluador + "\nCriterio: " + ev.criterio + "\nCalificación: " + ev.calificacion + "\n\n" + ev.observaciones);
+    }
+
+    // ---- Reportes (RF13): se envían al docente asesor ----
+    function generarReporte() {
+        let tipo = document.getElementById("rp-tipo").value;
+        let inicio = document.getElementById("rp-inicio").value;
+        let fin = document.getElementById("rp-fin").value;
+
+        if (!inicio || !fin) {
+            alert("Selecciona la fecha inicial y la fecha final del reporte.");
+            return;
+        }
+
+        let hoy = new Date().toISOString().split("T")[0];
+        reportes.push({
+            id: Date.now(),
+            fecha: hoy,
+            tipo: tipo,
+            periodo: formatearFecha(inicio) + " - " + formatearFecha(fin),
+            generadoPor: miNombre,
+            generadoPorRol: "estudiante",
+            destinatarioRol: "docente",
+            destinatarioNombre: MI_DOCENTE
+        });
+        guardar("sigpaReportes", reportes);
+
+        alert("Reporte generado correctamente.\nSe envió una copia a tu docente asesor, " + MI_DOCENTE + ".");
+
+        document.getElementById("rp-inicio").value = "";
+        document.getElementById("rp-fin").value = "";
+        pintarReportes();
+    }
+
+
+    /* =========================================================
+       5. NAVEGACIÓN ENTRE PÁGINAS
+    ========================================================= */
+    function mostrarPagina(nombre, boton) {
+        document.querySelectorAll(".page").forEach(function (p) { p.style.display = "none"; });
+        let pagina = document.getElementById(nombre);
+        if (pagina) pagina.style.display = "block";
+
+        document.querySelectorAll(".menu button").forEach(function (b) { b.classList.remove("active"); });
+        if (boton) boton.classList.add("active");
+    }
+
+    function cerrarSesion() {
+        sessionStorage.clear();
+        window.location.href = "../index.html";
+    }
+
+
+    /* =========================================================
+       6. PRIMER DIBUJADO AL CARGAR LA PÁGINA
+    ========================================================= */
+    pintarBitacoras();
+    pintarEvidencias();
+    pintarEvaluaciones();
+    pintarReportes();
+
+</script>
+
+</body>
+</html>

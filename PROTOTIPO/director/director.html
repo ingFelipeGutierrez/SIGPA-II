@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGPA - Panel del Director</title>
+    <link rel="stylesheet" href="../css/comun.css">
+    <link rel="stylesheet" href="director.css">
+</head>
+<body>
+
+<section id="app">
+
+    <!-- ===================== MENÚ LATERAL ===================== -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            🎓 SIGPA
+            <small>Gestión de Prácticas</small>
+        </div>
+        <span class="sidebar-rol">Director</span>
+
+        <!-- Nota: las funciones que antes tenía el Coordinador
+             (instituciones receptoras y asignación de estudiantes)
+             ahora las gestiona directamente el Director. -->
+        <ul class="menu">
+            <li><button class="active" onclick="mostrarPagina('inicio', this)">🏠 Panorama general</button></li>
+            <li><button onclick="mostrarPagina('instituciones', this)">🏫 Instituciones receptoras</button></li>
+            <li><button onclick="mostrarPagina('asignacion', this)">🧩 Asignación de estudiantes</button></li>
+            <li><button onclick="mostrarPagina('practicas', this)">📋 Prácticas activas</button></li>
+            <li><button onclick="mostrarPagina('reportes', this)">📊 Reportes</button></li>
+            <li><button onclick="cerrarSesion()">🚪 Cerrar sesión</button></li>
+        </ul>
+    </aside>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    <main class="main">
+
+        <header class="topbar">
+            <div class="topbar-title">Panel del Director de Programa</div>
+            <div class="user">
+                <div class="avatar">👤</div>
+                <div>
+                    <strong id="nombre-usuario">Ricardo Jaime</strong><br>
+                    <small id="rol-usuario">Director de Programa</small>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <!-- ============ PANORAMA GENERAL (RF12) ============ -->
+            <div id="inicio" class="page">
+                <div class="page-title">
+                    <h1>Panorama general</h1>
+                    <p>Estado general de las prácticas académicas de la Licenciatura en Matemáticas.</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card stat-card">
+                        <div class="stat-title">Prácticas activas</div>
+                        <div class="stat-number">42</div>
+                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver prácticas</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Instituciones con convenio</div>
+                        <div class="stat-number" id="kpi-instituciones">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('instituciones')">Ver instituciones</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Plazas disponibles</div>
+                        <div class="stat-number" id="kpi-plazas">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('asignacion')">Asignar estudiante</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Cumplimiento de horas</div>
+                        <div class="stat-number">71%</div>
+                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver detalle</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Bitácoras sin revisar</div>
+                        <div class="stat-number" id="kpi-bitacoras">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver detalle</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Reportes recibidos</div>
+                        <div class="stat-number" id="kpi-reportes">-</div>
+                        <div class="stat-link" onclick="mostrarPagina('reportes')">Ver reportes</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title">Últimas asignaciones</div>
+                        <div class="activity">Sara Higuera<small>Asignada a Colegio San Pedro Claver - 12 marzo 2026</small></div>
+                        <div class="activity">Diego Alarcón<small>Asignado a Colegio La Presentación - 10 marzo 2026</small></div>
+                        <div class="activity">Laura Fernández<small>Asignada a I.E. Simón Bolívar - 10 marzo 2026</small></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">Alertas de seguimiento</div>
+                        <div class="activity">Colegio San Pedro Claver<small>Convenio vence el 15 junio 2026</small></div>
+                        <div class="activity">María Paz Osorio<small>Bitácora pendiente de revisión por el docente asesor</small></div>
+                        <div class="activity">I.E. Técnica del Norte<small>1 plaza disponible sin asignar</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ INSTITUCIONES RECEPTORAS (RF03) ============ -->
+            <div id="instituciones" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Instituciones receptoras</h1>
+                    <p>Registra, consulta y administra los convenios con las instituciones.</p>
+                </div>
+
+                <div class="table-container">
+                    <div style="text-align:right; margin-bottom:15px">
+                        <button class="button-primary" onclick="mostrarFormInstitucion()">+ Registrar institución</button>
+                    </div>
+
+                    <!-- Formulario oculto que aparece al pulsar "+ Registrar institución" -->
+                    <div class="form-card" id="form-institucion" style="display:none; margin-bottom:18px;">
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label>Nombre de la institución</label>
+                                <input type="text" id="in-nombre" placeholder="Ej: Colegio Nuestra Señora del Rosario">
+                            </div>
+                            <div class="form-group">
+                                <label>Plazas disponibles</label>
+                                <input type="number" id="in-plazas" placeholder="Ej: 4">
+                            </div>
+                            <div class="form-group">
+                                <label>Convenio vigente hasta</label>
+                                <input type="date" id="in-convenio">
+                            </div>
+                        </div>
+                        <button class="button-secondary" onclick="cancelarInstitucion()">Cancelar</button>
+                        <button class="button-primary" onclick="guardarInstitucion()">Guardar institución</button>
+                    </div>
+
+                    <table>
+                        <thead><tr><th>Institución</th><th>Plazas</th><th>Convenio hasta</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-instituciones"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ ASIGNACIÓN DE ESTUDIANTES (RF05 / RF06) ============ -->
+            <div id="asignacion" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Asignación de estudiantes</h1>
+                    <p>Asigna estudiantes a las plazas disponibles y define su docente asesor.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Estudiante</label>
+                            <select id="as-estudiante">
+                                <option>Sara Higuera</option>
+                                <option>Camilo Ortega</option>
+                                <option>Valentina Ruiz</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Institución receptora</label>
+                            <select id="as-institucion"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Docente asesor</label>
+                            <select id="as-docente">
+                                <option>Laura Sánchez</option>
+                                <option>Patricia Nieto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de inicio</label>
+                            <input type="date" id="as-fecha">
+                        </div>
+                    </div>
+                    <button class="button-primary" onclick="guardarAsignacion()">Asignar práctica</button>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Asignaciones recientes</h3><br>
+                    <table>
+                        <thead><tr><th>Estudiante</th><th>Institución</th><th>Docente asesor</th><th>Fecha inicio</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-asignaciones"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ PRÁCTICAS ACTIVAS (RF12) ============ -->
+            <div id="practicas" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Prácticas activas</h1>
+                    <p>Vista consolidada del avance de bitácoras y horas por estudiante.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Estudiante</th><th>Última bitácora</th><th>Horas</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-practicas"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ REPORTES (RF13) ============ -->
+            <div id="reportes" class="page" style="display:none">
+                <div class="page-title">
+                    <h1>Reportes</h1>
+                    <p>Genera información consolidada y consulta los reportes que te envían los docentes asesores.</p>
+                </div>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipo de reporte</label>
+                            <select id="rp-tipo">
+                                <option>Cumplimiento de horas por institución</option>
+                                <option>Bitácoras pendientes por docente asesor</option>
+                                <option>Evaluaciones consolidadas del semestre</option>
+                                <option>Estado general de convenios</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Fecha inicial</label><input type="date" id="rp-inicio"></div>
+                        <div class="form-group"><label>Fecha final</label><input type="date" id="rp-fin"></div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
+                        </div>
+                    </div>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>📥 Reportes recibidos de docentes asesores</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Docente</th><th>Tipo</th><th>Periodo</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-reportes-recibidos"></tbody>
+                    </table>
+                </div><br>
+
+                <div class="table-container">
+                    <h3>Reportes generados por dirección</h3><br>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th></tr></thead>
+                        <tbody id="tabla-reportes-propios"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</section>
+
+
+<script>
+
+    /* =========================================================
+       1. SESIÓN
+    ========================================================= */
+    const miNombre = sessionStorage.getItem("sigpaNombre") || "Ricardo Jaime";
+    document.getElementById("nombre-usuario").textContent = miNombre;
+    document.getElementById("rol-usuario").textContent = sessionStorage.getItem("sigpaRol") || "Director de Programa";
+
+
+    /* =========================================================
+       2. CAPA DE DATOS
+    ========================================================= */
+    function cargar(clave, semilla) {
+        let datos = localStorage.getItem(clave);
+        if (!datos) {
+            localStorage.setItem(clave, JSON.stringify(semilla));
+            return semilla;
+        }
+        return JSON.parse(datos);
+    }
+
+    function guardar(clave, arreglo) {
+        localStorage.setItem(clave, JSON.stringify(arreglo));
+    }
+
+    let bitacoras = cargar("sigpaBitacoras", [
+        { id: 1, estudiante: "Laura Fernández", fecha: "2026-05-10", titulo: "Taller de números primos", descripcion: "Actividad lúdica sobre números primos con material concreto.", horas: 3, estado: "Aprobada" },
+        { id: 2, estudiante: "Laura Fernández", fecha: "2026-05-18", titulo: "Clase de geometría, grado 8°", descripcion: "Introducción a los ángulos internos de un triángulo.", horas: 4, estado: "Aprobada" },
+        { id: 3, estudiante: "Laura Fernández", fecha: "2026-05-25", titulo: "Refuerzo de fracciones, grado 6°", descripcion: "Taller práctico con material concreto.", horas: 3, estado: "Pendiente" },
+        { id: 4, estudiante: "María Paz Osorio", fecha: "2026-05-20", titulo: "Evaluación diagnóstica, grado 7°", descripcion: "Falta anexar la rúbrica de evaluación.", horas: 3, estado: "Pendiente" },
+        { id: 5, estudiante: "Juan Camilo Rey", fecha: "2026-05-18", titulo: "Clase de estadística", descripcion: "Recolección y tabulación de datos con el grupo.", horas: 4, estado: "Aprobada" }
+    ]);
+
+    let instituciones = cargar("sigpaInstituciones", [
+        { nombre: "I.E. Simón Bolívar", plazasOcupadas: 6, plazasTotal: 8, convenioHasta: "2026-12-15", estado: "Vigente" },
+        { nombre: "I.E. Técnica del Norte", plazasOcupadas: 4, plazasTotal: 5, convenioHasta: "2027-08-01", estado: "Vigente" },
+        { nombre: "Colegio San Pedro Claver", plazasOcupadas: 3, plazasTotal: 3, convenioHasta: "2026-06-15", estado: "Por renovar" },
+        { nombre: "Colegio La Presentación", plazasOcupadas: 2, plazasTotal: 4, convenioHasta: "2026-11-01", estado: "Vigente" }
+    ]);
+
+    let asignaciones = cargar("sigpaAsignaciones", [
+        { estudiante: "Laura Fernández", institucion: "I.E. Simón Bolívar", docente: "Laura Sánchez", fecha: "2026-03-10", estado: "Activa" },
+        { estudiante: "Diego Alarcón", institucion: "Colegio La Presentación", docente: "Laura Sánchez", fecha: "2026-03-10", estado: "Activa" }
+    ]);
+
+    let reportes = cargar("sigpaReportes", []);
+
+
+    /* =========================================================
+       3. RENDER DE TABLAS
+    ========================================================= */
+    function badge(estado) {
+        let clase = estado === "Aprobada" || estado === "Vigente" || estado === "Activa" ? "approved"
+                  : estado === "Rechazada" ? "rejected" : "pending";
+        return '<span class="badge ' + clase + '">' + estado + '</span>';
+    }
+
+    function formatearFecha(iso) {
+        let partes = iso.split("-");
+        return partes[2] + "/" + partes[1] + "/" + partes[0];
+    }
+
+    function pintarInstituciones() {
+        document.getElementById("kpi-instituciones").textContent = instituciones.length;
+
+        let plazasLibres = instituciones.reduce(function (total, inst) {
+            return total + (inst.plazasTotal - inst.plazasOcupadas);
+        }, 0);
+        document.getElementById("kpi-plazas").textContent = plazasLibres;
+
+        document.getElementById("tabla-instituciones").innerHTML = instituciones.map(function (inst) {
+            return "<tr>" +
+                "<td>" + inst.nombre + "</td>" +
+                "<td>" + inst.plazasOcupadas + " / " + inst.plazasTotal + "</td>" +
+                "<td>" + formatearFecha(inst.convenioHasta) + "</td>" +
+                "<td>" + badge(inst.estado) + "</td>" +
+                "</tr>";
+        }).join("");
+
+        // Refresca también el combo de instituciones en "Asignación de estudiantes"
+        document.getElementById("as-institucion").innerHTML = instituciones
+            .filter(function (inst) { return inst.plazasOcupadas < inst.plazasTotal; })
+            .map(function (inst) {
+                let libres = inst.plazasTotal - inst.plazasOcupadas;
+                return "<option>" + inst.nombre + " (" + libres + " plaza" + (libres === 1 ? "" : "s") + " disponible" + (libres === 1 ? "" : "s") + ")</option>";
+            }).join("");
+    }
+
+    function pintarAsignaciones() {
+        document.getElementById("tabla-asignaciones").innerHTML = asignaciones.map(function (a) {
+            return "<tr><td>" + a.estudiante + "</td><td>" + a.institucion + "</td><td>" + a.docente + "</td><td>" + formatearFecha(a.fecha) + "</td><td>" + badge(a.estado) + "</td></tr>";
+        }).join("");
+    }
+
+    function pintarPracticas() {
+        let porEstudiante = {};
+        bitacoras.forEach(function (b) {
+            if (!porEstudiante[b.estudiante] || b.fecha > porEstudiante[b.estudiante].fecha) {
+                porEstudiante[b.estudiante] = b;
+            }
+        });
+
+        let pendientesTotal = bitacoras.filter(function (b) { return b.estado === "Pendiente"; }).length;
+        document.getElementById("kpi-bitacoras").textContent = pendientesTotal;
+
+        document.getElementById("tabla-practicas").innerHTML = Object.keys(porEstudiante).map(function (nombre) {
+            let b = porEstudiante[nombre];
+            return "<tr><td>" + nombre + "</td><td>" + b.titulo + " (" + formatearFecha(b.fecha) + ")</td><td>" + b.horas + " h registradas</td><td>" + badge(b.estado) + "</td></tr>";
+        }).join("");
+    }
+
+    function pintarReportes() {
+        let recibidos = reportes.filter(function (r) { return r.destinatarioRol === "director"; });
+        document.getElementById("kpi-reportes").textContent = recibidos.length;
+
+        document.getElementById("tabla-reportes-recibidos").innerHTML = recibidos.map(function (r) {
+            return "<tr>" +
+                "<td>" + formatearFecha(r.fecha) + "</td>" +
+                "<td>" + r.generadoPor + "</td>" +
+                "<td>" + r.tipo + "</td>" +
+                "<td>" + r.periodo + "</td>" +
+                "<td><button class=\"button-secondary\" onclick=\"alert('Abriendo reporte de ' + '" + r.generadoPor + "'+'...')\">👁️ Ver</button></td>" +
+                "</tr>";
+        }).join("");
+
+        let propios = reportes.filter(function (r) { return r.generadoPor === miNombre; });
+        document.getElementById("tabla-reportes-propios").innerHTML = propios.map(function (r) {
+            return "<tr><td>" + formatearFecha(r.fecha) + "</td><td>" + r.tipo + "</td><td>" + r.periodo + "</td></tr>";
+        }).join("");
+    }
+
+
+    /* =========================================================
+       4. ACCIONES
+    ========================================================= */
+
+    // RF03: registrar institución
+    function mostrarFormInstitucion() {
+        document.getElementById("form-institucion").style.display = "block";
+    }
+
+    function cancelarInstitucion() {
+        document.getElementById("form-institucion").style.display = "none";
+        document.getElementById("in-nombre").value = "";
+        document.getElementById("in-plazas").value = "";
+        document.getElementById("in-convenio").value = "";
+    }
+
+    function guardarInstitucion() {
+        let nombre = document.getElementById("in-nombre").value.trim();
+        let plazas = document.getElementById("in-plazas").value;
+        let convenio = document.getElementById("in-convenio").value;
+
+        if (!nombre || !plazas || !convenio) {
+            alert("Por favor completa todos los campos de la institución.");
+            return;
+        }
+
+        instituciones.push({ nombre: nombre, plazasOcupadas: 0, plazasTotal: Number(plazas), convenioHasta: convenio, estado: "Vigente" });
+        guardar("sigpaInstituciones", instituciones);
+
+        alert("Institución \"" + nombre + "\" registrada correctamente.");
+        cancelarInstitucion();
+        pintarInstituciones();
+    }
+
+    // RF05 / RF06: asignar estudiante a una plaza y a un docente asesor
+    function guardarAsignacion() {
+        let estudiante = document.getElementById("as-estudiante").value;
+        let institucionTexto = document.getElementById("as-institucion").value;
+        let docente = document.getElementById("as-docente").value;
+        let fecha = document.getElementById("as-fecha").value;
+
+        if (!institucionTexto || !fecha) {
+            alert("Selecciona la institución y la fecha de inicio.");
+            return;
+        }
+
+        let nombreInstitucion = institucionTexto.split(" (")[0];
+        let institucion = instituciones.find(function (i) { return i.nombre === nombreInstitucion; });
+        if (institucion) {
+            institucion.plazasOcupadas += 1;
+            guardar("sigpaInstituciones", instituciones);
+        }
+
+        asignaciones.push({ estudiante: estudiante, institucion: nombreInstitucion, docente: docente, fecha: fecha, estado: "Activa" });
+        guardar("sigpaAsignaciones", asignaciones);
+
+        alert(estudiante + " fue asignado correctamente a " + nombreInstitucion + " con la docente asesora " + docente + ".");
+
+        document.getElementById("as-fecha").value = "";
+        pintarInstituciones();
+        pintarAsignaciones();
+    }
+
+    // RF13: generar reporte (nivel dirección, no tiene más destinatario)
+    function generarReporte() {
+        let tipo = document.getElementById("rp-tipo").value;
+        let inicio = document.getElementById("rp-inicio").value;
+        let fin = document.getElementById("rp-fin").value;
+
+        if (!inicio || !fin) {
+            alert("Selecciona la fecha inicial y la fecha final del reporte.");
+            return;
+        }
+
+        let hoy = new Date().toISOString().split("T")[0];
+        reportes.push({
+            id: Date.now(),
+            fecha: hoy,
+            tipo: tipo,
+            periodo: formatearFecha(inicio) + " - " + formatearFecha(fin),
+            generadoPor: miNombre,
+            generadoPorRol: "director",
+            destinatarioRol: null,
+            destinatarioNombre: "Archivo de dirección"
+        });
+        guardar("sigpaReportes", reportes);
+
+        alert("Reporte generado correctamente y archivado en dirección.");
+
+        document.getElementById("rp-inicio").value = "";
+        document.getElementById("rp-fin").value = "";
+        pintarReportes();
+    }
+
+
+    /* =========================================================
+       5. NAVEGACIÓN
+    ========================================================= */
+    function mostrarPagina(nombre, boton) {
+        document.querySelectorAll(".page").forEach(function (p) { p.style.display = "none"; });
+        let pagina = document.getElementById(nombre);
+        if (pagina) pagina.style.display = "block";
+
+        document.querySelectorAll(".menu button").forEach(function (b) { b.classList.remove("active"); });
+        if (boton) boton.classList.add("active");
+    }
+
+    function cerrarSesion() {
+        sessionStorage.clear();
+        window.location.href = "../index.html";
+    }
+
+
+    /* =========================================================
+       6. PRIMER DIBUJADO
+    ========================================================= */
+    pintarInstituciones();
+    pintarAsignaciones();
+    pintarPracticas();
+    pintarReportes();
+
+</script>
+
+</body>
+</html>

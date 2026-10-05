@@ -1,11 +1,12 @@
 /* =========================================================================
    SIGPA · css/comun.css
-   Estilos COMPARTIDOS por todas las páginas del proyecto (login y los
-   cuatro paneles de actor). Cada carpeta de actor tiene, además, su propio
-   archivo CSS (por ejemplo /docente/docente.css) que se carga DESPUÉS de
-   este y que solo ajusta el color de acento y detalles particulares de
-   ese rol, para que cada actor se sienta visualmente identificable sin
-   duplicar todo el código en cada carpeta.
+   ÚNICA hoja de estilos del proyecto: la usan el login y los tres paneles
+   de actor (Estudiante, Docente Asesor y Director de Programa).
+
+   Cada rol se diferencia por su color de acento, que se define más abajo
+   con una clase en el <body> (rol-estudiante, rol-docente, rol-director).
+   De esa forma no hace falta un archivo CSS por carpeta, lo que duplicaba
+   código y es una mala práctica.
    ========================================================================= */
 
 /* -------------------------------------------------------------------------
@@ -14,12 +15,22 @@
 :root {
     --azul-oscuro: #173f78;   /* color base de marca (sidebar, login) */
     --azul: #2864c7;          /* color de acento por defecto */
-    --acento: var(--azul);    /* cada rol lo sobreescribe en su propio CSS */
+    --acento: var(--azul);    /* valor por defecto; cada rol lo cambia abajo */
     --fondo: #f4f6f9;
     --texto: #26354d;
     --gris-texto: #777;
     --borde: #e2e6eb;
 }
+
+/* -------------------------------------------------------------------------
+   COLOR DE ACENTO SEGÚN EL ROL
+   El <body> de cada panel lleva una de estas clases. Al cambiar --acento,
+   el sidebar, los botones y las tarjetas cambian de color automáticamente,
+   porque todos lo leen desde esta misma variable.
+   ------------------------------------------------------------------------- */
+body.rol-estudiante { --acento: #2864c7; }  /* azul   */
+body.rol-docente    { --acento: #1f9d63; }  /* verde  */
+body.rol-director   { --acento: #c9820f; }  /* dorado */
 
 /* -------------------------------------------------------------------------
    CONFIGURACIÓN GENERAL

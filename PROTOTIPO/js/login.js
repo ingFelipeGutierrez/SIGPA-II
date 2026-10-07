@@ -1,51 +1,77 @@
 /* =========================================================================
    SIGPA · js/login.js
-   Lógica del inicio de sesión (RF01). Valida las credenciales contra una
-   base de usuarios simulada y, si son correctas, guarda la sesión y
-   redirige al panel que corresponde al rol.
+   Lógica del inicio de sesión.
 
-   Cuando exista la API de autenticación (MongoDB), esta validación local
-   se reemplaza por una llamada POST /api/login.
+   El login se asume como un proceso estándar (no es un caso de uso). Valida
+   las credenciales contra la base de usuarios de datos.js y, si son
+   correctas, guarda la sesión y redirige al panel del rol.
+
+   Cuando exista la API de autenticación, la validación local se reemplaza
+   por una llamada POST /api/login, y "Recordarme" tendrá efecto real.
    ========================================================================= */
 
-/* =========================================================
-   BASE DE USUARIOS (simulada, sin backend).
-========================================================= */
-const usuarios = {
-    "estudiante": { password: "123456", nombre: "Laura Fernández", rol: "Estudiante",           carpeta: "estudiante/estudiante.html" },
-    "docente":    { password: "123456", nombre: "Laura Sánchez",   rol: "Docente Asesor",        carpeta: "docente/docente.html" },
-    "director":   { password: "123456", nombre: "Ricardo Jaime",   rol: "Director de Programa",  carpeta: "director/director.html" }
+const DESTINO = {
+    "Estudiante": "estudiante/estudiante.html",
+    "Docente Asesor": "docente/docente.html",
+    "Director de Programa": "director/director.html"
 };
 
-function iniciarSesion() {
+// Foco automático en "Usuario" al cargar.
+document.getElementById("usuario").focus();
 
-    let usuario = document.getElementById("usuario").value.trim();
-    let password = document.getElementById("password").value;
-    let errorBox = document.getElementById("login-error");
+// Mostrar u ocultar la contraseña.
+document.getElementById("ver-clave").addEventListener("click", function () {
+    let campo = document.getElementById("password");
+    let mostrar = campo.type === "password";
+    campo.type = mostrar ? "text" : "password";
+    this.setAttribute("aria-label", mostrar ? "Ocultar contraseña" : "Mostrar contraseña");
+});
 
-    errorBox.style.display = "none";
+// Enter envía el formulario.
+["usuario", "password"].forEach(function (id) {
+    document.getElementById(id).addEventListener("keydown", function (e) {
+        if (e.key === "Enter") iniciarSesion();
+    });
+});
 
-    if (usuario === "" || password === "") {
-        errorBox.textContent = "Por favor ingrese usuario y contraseña.";
-        errorBox.style.display = "block";
-        return;
-    }
-
-    let datosUsuario = usuarios[usuario];
-
-    if (!datosUsuario || datosUsuario.password !== password) {
-        errorBox.textContent = "Usuario o contraseña incorrectos.";
-        errorBox.style.display = "block";
-        return;
-    }
-
-    sessionStorage.setItem("sigpaUsuario", usuario);
-    sessionStorage.setItem("sigpaNombre", datosUsuario.nombre);
-    sessionStorage.setItem("sigpaRol", datosUsuario.rol);
-
-    window.location.href = datosUsuario.carpeta;
+function mostrarError(mensaje) {
+    let caja = document.getElementById("login-error");
+    caja.textContent = mensaje;
+    caja.classList.add("visible");
 }
 
-document.getElementById("password").addEventListener("keyup", function (evento) {
-    if (evento.key === "Enter") iniciarSesion();
-});
+async function iniciarSesion() {
+    let usuario = document.getElementById("usuario").value.trim();
+    let clave = document.getElementById("password").value;
+    let boton = document.getElementById("boton-login");
+
+    if (!usuario || !clave) {
+        mostrarError("Ingresa tu usuario y tu contraseña.");
+        return;
+    }
+
+    // Estado "Ingresando…" mientras valida.
+    boton.disabled = true;
+    boton.classList.add("cargando");
+    boton.textContent = "Ingresando…";
+
+    // Pequeña espera simulada (lo que después hará la llamada a la API).
+    await new Promise(function (r) { setTimeout(r, 500); });
+
+    let u = await Datos.validarLogin(usuario, clave);
+
+    if (!u) {
+        boton.disabled = false;
+        boton.classList.remove("cargando");
+        boton.textContent = "Iniciar sesión";
+        mostrarError("Usuario o contraseña incorrectos.");
+        return;
+    }
+
+    sessionStorage.setItem("sigpaUsuario", u.usuario);
+    sessionStorage.setItem("sigpaRol", u.rol);
+    sessionStorage.setItem("sigpaNombre", u.nombre);
+    sessionStorage.setItem("sigpaRefId", u.refId);
+
+    window.location.href = DESTINO[u.rol];
+}

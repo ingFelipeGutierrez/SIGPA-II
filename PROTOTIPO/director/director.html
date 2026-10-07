@@ -2,257 +2,132 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>SIGPA - Panel del Director</title>
     <link rel="stylesheet" href="../css/comun.css">
 </head>
 <body class="rol-director">
 
 <section id="app">
-
-    <!-- ===================== MENÚ LATERAL ===================== -->
     <aside class="sidebar">
-        <div class="sidebar-logo">
-            🎓 SIGPA
-            <small>Gestión de Prácticas</small>
-        </div>
-        <span class="sidebar-rol">Director</span>
-
-        <!-- Nota: las funciones que antes tenía el Coordinador
-             (instituciones receptoras y asignación de estudiantes)
-             ahora las gestiona directamente el Director. -->
+        <div class="sidebar-logo">🎓 SIGPA<small>Gestión de Prácticas</small></div>
+        <span class="sidebar-rol">Director de Programa</span>
         <ul class="menu">
-            <li><button class="active" onclick="mostrarPagina('inicio', this)">🏠 Panorama general</button></li>
-            <li><button onclick="mostrarPagina('instituciones', this)">🏫 Instituciones receptoras</button></li>
-            <li><button onclick="mostrarPagina('asignacion', this)">🧩 Asignación de estudiantes</button></li>
-            <li><button onclick="mostrarPagina('practicas', this)">📋 Prácticas activas</button></li>
-            <li><button onclick="mostrarPagina('reportes', this)">📊 Reportes</button></li>
+            <li><button class="active" data-pagina="inicio" onclick="mostrarPagina('inicio', this)">🏠 Inicio</button></li>
+            <li><button data-pagina="gestionar" onclick="mostrarPagina('gestionar', this)">📋 Gestionar prácticas</button></li>
+            <li><button data-pagina="instituciones" onclick="mostrarPagina('instituciones', this)">🏫 Instituciones receptoras</button></li>
+            <li><button data-pagina="estado" onclick="mostrarPagina('estado', this)">📊 Estado de las prácticas</button></li>
+            <li><button data-pagina="supervision" onclick="mostrarPagina('supervision', this)">⏱️ Supervisión de horas</button></li>
+            <li><button data-pagina="reportes" onclick="mostrarPagina('reportes', this)">📈 Reportes</button></li>
             <li><button onclick="cerrarSesion()">🚪 Cerrar sesión</button></li>
         </ul>
     </aside>
 
-    <!-- ===================== CONTENIDO ===================== -->
     <main class="main">
-
         <header class="topbar">
-            <div class="topbar-title">Panel del Director de Programa</div>
-            <div class="user">
-                <div class="avatar">👤</div>
-                <div>
-                    <strong id="nombre-usuario">Ricardo Jaime</strong><br>
-                    <small id="rol-usuario">Director de Programa</small>
-                </div>
-            </div>
+            <button class="hamburguesa" onclick="alternarMenuMovil()" aria-label="Menú">☰</button>
+            <div class="topbar-title">Panel del Director</div>
+            <div class="user"><div><strong id="nombre-usuario"></strong><br><small id="rol-usuario"></small></div><div class="avatar" id="avatar-usuario"></div></div>
         </header>
 
         <div class="content">
 
-            <!-- ============ PANORAMA GENERAL (RF12) ============ -->
+            <!-- INICIO -->
             <div id="inicio" class="page">
-                <div class="page-title">
-                    <h1>Panorama general</h1>
-                    <p>Estado general de las prácticas académicas de la Licenciatura en Matemáticas.</p>
-                </div>
-
-                <div class="cards">
-                    <div class="card stat-card">
-                        <div class="stat-title">Prácticas activas</div>
-                        <div class="stat-number">42</div>
-                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver prácticas</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Instituciones con convenio</div>
-                        <div class="stat-number" id="kpi-instituciones">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('instituciones')">Ver instituciones</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Plazas disponibles</div>
-                        <div class="stat-number" id="kpi-plazas">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('asignacion')">Asignar estudiante</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Cumplimiento de horas</div>
-                        <div class="stat-number">71%</div>
-                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver detalle</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Bitácoras sin revisar</div>
-                        <div class="stat-number" id="kpi-bitacoras">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('practicas')">Ver detalle</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Reportes recibidos</div>
-                        <div class="stat-number" id="kpi-reportes">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('reportes')">Ver reportes</div>
-                    </div>
-                </div>
-
+                <div class="page-title"><h1 id="saludo">Hola</h1><p>Este es el panorama general del programa.</p></div>
+                <div class="cards" id="kpis"></div>
                 <div class="grid-2">
-                    <div class="card">
-                        <div class="section-title">Últimas asignaciones</div>
-                        <div class="activity">Sara Higuera<small>Asignada a Colegio San Pedro Claver - 12 marzo 2026</small></div>
-                        <div class="activity">Diego Alarcón<small>Asignado a Colegio La Presentación - 10 marzo 2026</small></div>
-                        <div class="activity">Laura Fernández<small>Asignada a I.E. Simón Bolívar - 10 marzo 2026</small></div>
-                    </div>
-                    <div class="card">
-                        <div class="section-title">Alertas de seguimiento</div>
-                        <div class="activity">Colegio San Pedro Claver<small>Convenio vence el 15 junio 2026</small></div>
-                        <div class="activity">María Paz Osorio<small>Bitácora pendiente de revisión por el docente asesor</small></div>
-                        <div class="activity">I.E. Técnica del Norte<small>1 plaza disponible sin asignar</small></div>
-                    </div>
+                    <div class="card"><div class="section-title">Alertas de seguimiento</div><div id="alertas"></div></div>
+                    <div class="card"><div class="section-title">Últimas asignaciones</div><div id="asignaciones"></div></div>
                 </div>
             </div>
 
-            <!-- ============ INSTITUCIONES RECEPTORAS (RF03) ============ -->
+            <!-- GESTIONAR PRÁCTICAS -->
+            <div id="gestionar" class="page" style="display:none">
+                <div id="gestionar-inicio">
+                    <div class="page-title"><h1>Gestionar prácticas</h1><p>Asigna docentes y grupos, registra plazas y decide el resultado de las prácticas.</p></div>
+                    <div class="cards" id="acciones-gestionar"></div>
+                </div>
+                <div id="sub-pagina" style="display:none"></div>
+            </div>
+
+            <!-- INSTITUCIONES -->
             <div id="instituciones" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Instituciones receptoras</h1>
-                    <p>Registra, consulta y administra los convenios con las instituciones.</p>
-                </div>
-
+                <div class="page-title"><h1>Instituciones receptoras</h1><p>Administra las instituciones y sus convenios.</p></div>
                 <div class="table-container">
-                    <div style="text-align:right; margin-bottom:15px">
-                        <button class="button-primary" onclick="mostrarFormInstitucion()">+ Registrar institución</button>
-                    </div>
-
-                    <!-- Formulario oculto que aparece al pulsar "+ Registrar institución" -->
-                    <div class="form-card" id="form-institucion" style="display:none; margin-bottom:18px;">
-                        <div class="form-grid">
-                            <div class="form-group full">
-                                <label>Nombre de la institución</label>
-                                <input type="text" id="in-nombre" placeholder="Ej: Colegio Nuestra Señora del Rosario">
-                            </div>
-                            <div class="form-group">
-                                <label>Plazas disponibles</label>
-                                <input type="number" id="in-plazas" placeholder="Ej: 4">
-                            </div>
-                            <div class="form-group">
-                                <label>Convenio vigente hasta</label>
-                                <input type="date" id="in-convenio">
-                            </div>
-                        </div>
-                        <button class="button-secondary" onclick="cancelarInstitucion()">Cancelar</button>
-                        <button class="button-primary" onclick="guardarInstitucion()">Guardar institución</button>
-                    </div>
-
-                    <table>
-                        <thead><tr><th>Institución</th><th>Plazas</th><th>Convenio hasta</th><th>Estado</th></tr></thead>
+                    <div style="text-align:right;margin-bottom:15px"><button class="button-primary" onclick="abrirFormInstitucion()">+ Registrar institución</button></div>
+                    <div id="form-institucion" style="display:none"></div>
+                    <div class="tabla-scroll"><table class="apilable">
+                        <thead><tr><th>Institución</th><th>Tipo</th><th>Convenio</th><th>Plazas</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody id="tabla-instituciones"></tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
 
-            <!-- ============ ASIGNACIÓN DE ESTUDIANTES (RF05 / RF06) ============ -->
-            <div id="asignacion" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Asignación de estudiantes</h1>
-                    <p>Asigna estudiantes a las plazas disponibles y define su docente asesor.</p>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Estudiante</label>
-                            <select id="as-estudiante">
-                                <option>Sara Higuera</option>
-                                <option>Camilo Ortega</option>
-                                <option>Valentina Ruiz</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Institución receptora</label>
-                            <select id="as-institucion"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Docente asesor</label>
-                            <select id="as-docente">
-                                <option>Laura Sánchez</option>
-                                <option>Patricia Nieto</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha de inicio</label>
-                            <input type="date" id="as-fecha">
-                        </div>
+            <!-- ESTADO DE LAS PRÁCTICAS -->
+            <div id="estado" class="page" style="display:none">
+                <div class="page-title"><h1>Estado de las prácticas</h1><p>Consulta el panorama de todas las prácticas del programa.</p></div>
+                <div class="table-container">
+                    <div class="filtros">
+                        <div class="campo"><label for="e-institucion">Institución receptora</label><select id="e-institucion" onchange="pintarEstado()"></select></div>
+                        <div class="campo"><label for="e-docente">Docente asesor</label><select id="e-docente" onchange="pintarEstado()"></select></div>
+                        <button class="button-secondary" onclick="limpiarFiltrosEstado()">Limpiar</button>
                     </div>
-                    <button class="button-primary" onclick="guardarAsignacion()">Asignar práctica</button>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>Asignaciones recientes</h3><br>
-                    <table>
-                        <thead><tr><th>Estudiante</th><th>Institución</th><th>Docente asesor</th><th>Fecha inicio</th><th>Estado</th></tr></thead>
-                        <tbody id="tabla-asignaciones"></tbody>
-                    </table>
+                    <div class="cards" id="estado-tarjetas" style="margin-bottom:20px"></div>
+                    <div class="tabla-scroll"><table class="apilable">
+                        <thead><tr><th>Estudiante</th><th>Institución</th><th>Docente</th><th>Grupo</th><th>Fechas</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-estado"></tbody>
+                    </table></div>
+                    <div class="vacio" id="vacio-estado" style="display:none"></div>
                 </div>
             </div>
 
-            <!-- ============ PRÁCTICAS ACTIVAS (RF12) ============ -->
-            <div id="practicas" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Prácticas activas</h1>
-                    <p>Vista consolidada del avance de bitácoras y horas por estudiante.</p>
-                </div>
-
+            <!-- SUPERVISIÓN DE HORAS -->
+            <div id="supervision" class="page" style="display:none">
+                <div class="page-title"><h1>Supervisión de horas</h1><p>Supervisa el cumplimiento de horas de los estudiantes en práctica.</p></div>
+                <div class="cards" id="sup-tarjetas"></div>
                 <div class="table-container">
-                    <table>
-                        <thead><tr><th>Estudiante</th><th>Última bitácora</th><th>Horas</th><th>Estado</th></tr></thead>
-                        <tbody id="tabla-practicas"></tbody>
-                    </table>
+                    <div class="filtros">
+                        <div class="campo"><label for="s-nivel">Nivel de cumplimiento</label><select id="s-nivel" onchange="pintarSupervision()">
+                            <option value="">Todos</option><option>Bajo</option><option>Medio</option><option>Alto</option></select></div>
+                        <button class="button-secondary" onclick="limpiarFiltroSup()">Limpiar</button>
+                    </div>
+                    <div class="tabla-scroll"><table class="apilable">
+                        <thead><tr><th>Estudiante</th><th>Institución</th><th>Docente</th><th>Horas</th><th>Cumplimiento</th><th>Nivel</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-supervision"></tbody>
+                    </table></div>
+                    <div class="vacio" id="vacio-supervision" style="display:none"></div>
                 </div>
             </div>
 
-            <!-- ============ REPORTES (RF13) ============ -->
+            <!-- REPORTES -->
             <div id="reportes" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Reportes</h1>
-                    <p>Genera información consolidada y consulta los reportes que te envían los docentes asesores.</p>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Tipo de reporte</label>
-                            <select id="rp-tipo">
-                                <option>Cumplimiento de horas por institución</option>
-                                <option>Bitácoras pendientes por docente asesor</option>
-                                <option>Evaluaciones consolidadas del semestre</option>
-                                <option>Estado general de convenios</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Fecha inicial</label><input type="date" id="rp-inicio"></div>
-                        <div class="form-group"><label>Fecha final</label><input type="date" id="rp-fin"></div>
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
-                        </div>
+                <div class="page-title"><h1>Reportes</h1><p>Genera reportes e indicadores del estado de las prácticas.</p></div>
+                <div class="card" style="margin-bottom:20px">
+                    <div class="filtros">
+                        <div class="campo"><label for="r-tipo">Tipo de reporte</label><select id="r-tipo">
+                            <option>Cumplimiento de horas por institución</option>
+                            <option>Bitácoras por docente asesor</option>
+                            <option>Desempeño y resultado de las prácticas</option>
+                            <option>Estado de los convenios</option></select></div>
+                        <div class="campo"><label for="r-desde">Fecha inicial</label><input type="date" id="r-desde"></div>
+                        <div class="campo"><label for="r-hasta">Fecha final</label><input type="date" id="r-hasta"></div>
+                        <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
                     </div>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>📥 Reportes recibidos de docentes asesores</h3><br>
-                    <table>
-                        <thead><tr><th>Fecha</th><th>Docente</th><th>Tipo</th><th>Periodo</th><th>Acciones</th></tr></thead>
-                        <tbody id="tabla-reportes-recibidos"></tbody>
-                    </table>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>Reportes generados por dirección</h3><br>
-                    <table>
-                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th></tr></thead>
-                        <tbody id="tabla-reportes-propios"></tbody>
-                    </table>
+                    <div class="campo-error" id="err-reporte" style="display:none"></div>
                 </div>
+                <div id="reporte-resultado"></div>
             </div>
 
         </div>
     </main>
 </section>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <script src="../js/comun.js"></script>
+<script src="../js/datos.js"></script>
 <script src="director.js"></script>
-
 </body>
 </html>

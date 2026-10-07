@@ -2,79 +2,52 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>SIGPA - Iniciar sesión</title>
     <link rel="stylesheet" href="css/comun.css">
 </head>
-<body>
-
-<!-- =========================================================
-     LOGIN
-     RF01: El sistema debe permitir el inicio de sesión mediante
-     credenciales, y dirigir a cada usuario a la carpeta e
-     interfaz que corresponde a su rol.
-
-     Nota: el rol "Coordinador" se eliminó; sus funciones
-     (instituciones receptoras y asignación de estudiantes)
-     ahora las maneja el Director de programa.
-========================================================= -->
-
-<section id="login">
+<body class="login-body">
 
     <div class="login-container">
-
         <div class="login-left">
-            <div class="login-icon">🎓</div>
-            <div class="logo">SIGPA</div>
-            <h1>Sistema Integral de Gestión de Prácticas Académicas</h1>
-            <p>
-                Organiza, gestiona y realiza seguimiento
-                a las prácticas académicas de manera
-                fácil y eficiente.
-            </p>
+            <div class="logo">🎓 SIGPA<small>Gestión de Prácticas Académicas</small></div>
+            <p>Organiza, gestiona y realiza seguimiento a las prácticas académicas de manera fácil y eficiente.</p>
         </div>
 
         <div class="login-right">
-
             <h2>Iniciar sesión</h2>
             <p>Ingresa tus credenciales para acceder a la plataforma.</p>
 
-            <div class="login-error" id="login-error">
-                Usuario o contraseña incorrectos.
+            <div class="login-error" id="login-error"></div>
+
+            <div class="input-group">
+                <label for="usuario">Usuario</label>
+                <div class="input-wrap">
+                    <input type="text" id="usuario" placeholder="Ingresa tu usuario" autocomplete="username">
+                </div>
             </div>
 
             <div class="input-group">
-                <label>Usuario</label>
-                <input type="text" id="usuario" placeholder="Ingrese su usuario">
+                <label for="password">Contraseña</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" placeholder="Ingresa tu contraseña" autocomplete="current-password">
+                    <button type="button" class="ver-clave" id="ver-clave" aria-label="Mostrar contraseña">👁️</button>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label>Contraseña</label>
-                <input type="password" id="password" placeholder="Ingrese su contraseña">
-            </div>
+            <label class="remember"><input type="checkbox" id="recordarme"> Recordarme</label>
 
-            <div class="remember">
-                <input type="checkbox"> Recordarme
-            </div>
-
-            <button class="login-button" onclick="iniciarSesion()">
-                Iniciar sesión
-            </button>
+            <button class="login-button" id="boton-login" onclick="iniciarSesion()">Iniciar sesión</button>
 
             <div class="login-hint">
                 <strong>Usuarios de prueba:</strong><br>
-                estudiante / 123456 &nbsp;·&nbsp; docente / 123456<br>
-                director / 123456
+                estudiante / 123456 &nbsp;·&nbsp; docente / 123456 &nbsp;·&nbsp; director / 123456
             </div>
-
         </div>
-
     </div>
 
-</section>
-
-
-<script src="js/login.js"></script>
-
+    <script src="js/comun.js"></script>
+    <script src="js/datos.js"></script>
+    <script src="js/login.js"></script>
 </body>
 </html>

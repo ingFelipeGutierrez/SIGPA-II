@@ -2,238 +2,79 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGPA - Panel del Docente Asesor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>SIGPA - Panel del Docente</title>
     <link rel="stylesheet" href="../css/comun.css">
 </head>
 <body class="rol-docente">
 
 <section id="app">
-
-    <!-- ===================== MENÚ LATERAL ===================== -->
     <aside class="sidebar">
-        <div class="sidebar-logo">
-            🎓 SIGPA
-            <small>Gestión de Prácticas</small>
-        </div>
+        <div class="sidebar-logo">🎓 SIGPA<small>Gestión de Prácticas</small></div>
         <span class="sidebar-rol">Docente Asesor</span>
-
         <ul class="menu">
-            <li><button class="active" onclick="mostrarPagina('inicio', this)">🏠 Inicio</button></li>
-            <li><button onclick="mostrarPagina('estudiantes', this)">👥 Mis estudiantes</button></li>
-            <li><button onclick="mostrarPagina('bitacoras', this)">📝 Bitácoras por revisar</button></li>
-            <li><button onclick="mostrarPagina('evaluaciones', this)">⭐ Evaluaciones</button></li>
-            <li><button onclick="mostrarPagina('reportes', this)">📊 Reportes</button></li>
+            <li><button class="active" data-pagina="inicio" onclick="mostrarPagina('inicio', this)">🏠 Inicio</button></li>
+            <li><button data-pagina="estudiantes" onclick="mostrarPagina('estudiantes', this)">👥 Mis estudiantes</button></li>
+            <li><button data-pagina="bitacoras" id="menu-bitacoras" onclick="mostrarPagina('bitacoras', this)">📝 Bitácoras por revisar</button></li>
             <li><button onclick="cerrarSesion()">🚪 Cerrar sesión</button></li>
         </ul>
     </aside>
 
-    <!-- ===================== CONTENIDO ===================== -->
     <main class="main">
-
         <header class="topbar">
-            <div class="topbar-title">Panel del Docente Asesor</div>
-            <div class="user">
-                <div class="avatar">👤</div>
-                <div>
-                    <strong id="nombre-usuario">Laura Sánchez</strong><br>
-                    <small id="rol-usuario">Docente Asesor</small>
-                </div>
-            </div>
+            <button class="hamburguesa" onclick="alternarMenuMovil()" aria-label="Menú">☰</button>
+            <div class="topbar-title">Panel del Docente</div>
+            <div class="user"><div><strong id="nombre-usuario"></strong><br><small id="rol-usuario"></small></div><div class="avatar" id="avatar-usuario"></div></div>
         </header>
 
         <div class="content">
 
-            <!-- ============ INICIO ============ -->
+            <!-- INICIO -->
             <div id="inicio" class="page">
-                <div class="page-title">
-                    <h1>Dashboard</h1>
-                    <p>¡Bienvenida! Este es el resumen de tus estudiantes a cargo.</p>
-                </div>
-
-                <div class="cards">
-                    <div class="card stat-card">
-                        <div class="stat-title">Estudiantes a cargo</div>
-                        <div class="stat-number">4</div>
-                        <div class="stat-link" onclick="mostrarPagina('estudiantes')">Ver estudiantes</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Bitácoras por revisar</div>
-                        <div class="stat-number" id="kpi-pendientes">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('bitacoras')">Revisar ahora</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Horas promedio cumplidas</div>
-                        <div class="stat-number">68%</div>
-                        <div class="stat-link" onclick="mostrarPagina('estudiantes')">Ver detalle</div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-title">Reportes recibidos</div>
-                        <div class="stat-number" id="kpi-reportes">-</div>
-                        <div class="stat-link" onclick="mostrarPagina('reportes')">Ver reportes</div>
-                    </div>
-                </div>
-
+                <div class="page-title"><h1 id="saludo">Hola</h1><p>Este es el resumen de tus estudiantes en práctica.</p></div>
+                <div class="cards" id="kpis"></div>
                 <div class="grid-2">
-                    <div class="card">
-                        <div class="section-title">Últimas bitácoras recibidas</div>
-                        <div class="activity">Laura Fernández<small>Refuerzo de fracciones, grado 6° - 25 mayo 2026</small></div>
-                        <div class="activity">María Paz Osorio<small>Evaluación diagnóstica, grado 7° - 20 mayo 2026</small></div>
-                        <div class="activity">Diego Alarcón<small>Clase de estadística - 19 mayo 2026</small></div>
-                    </div>
-                    <div class="card">
-                        <div class="section-title">Próximas fechas importantes</div>
-                        <div class="activity">Cierre de evaluaciones del corte<small>30 mayo 2026</small></div>
-                        <div class="activity">Reunión con dirección de programa<small>02 junio 2026</small></div>
-                        <div class="activity">Evaluación final de prácticas<small>10 junio 2026</small></div>
-                    </div>
+                    <div class="card"><div class="section-title">Últimas bitácoras recibidas</div><div id="ultimas-bitacoras"></div></div>
+                    <div class="card"><div class="section-title">Avance de mis estudiantes</div><div id="avance-estudiantes"></div></div>
                 </div>
             </div>
 
-            <!-- ============ MIS ESTUDIANTES ============ -->
+            <!-- MIS ESTUDIANTES -->
             <div id="estudiantes" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Mis estudiantes</h1>
-                    <p>Consulta el estado y las horas de práctica de cada estudiante asignado.</p>
-                </div>
-
+                <div class="page-title"><h1>Mis estudiantes</h1><p>Consulta tus estudiantes asignados y su avance de horas.</p></div>
                 <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>Estudiante</th><th>Institución receptora</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Laura Fernández</td><td>I.E. Simón Bolívar</td><td>96 / 160 h</td>
-                                <td><span class="badge pending">1 por revisar</span></td>
-                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
-                            </tr>
-                            <tr>
-                                <td>Juan Camilo Rey</td><td>I.E. Técnica del Norte</td><td>140 / 160 h</td>
-                                <td><span class="badge approved">Al día</span></td>
-                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
-                            </tr>
-                            <tr>
-                                <td>María Paz Osorio</td><td>I.E. Simón Bolívar</td><td>70 / 160 h</td>
-                                <td><span class="badge pending">1 por revisar</span></td>
-                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
-                            </tr>
-                            <tr>
-                                <td>Diego Alarcón</td><td>Colegio La Presentación</td><td>112 / 160 h</td>
-                                <td><span class="badge approved">Al día</span></td>
-                                <td><button class="button-secondary" onclick="mostrarPagina('bitacoras')">Ver bitácora</button></td>
-                            </tr>
-                        </tbody>
+                    <div class="filtros">
+                        <div class="campo"><label for="f-institucion">Institución receptora</label><select id="f-institucion" onchange="pintarEstudiantes()"></select></div>
+                        <div class="campo"><label for="f-estado">Estado de la práctica</label><select id="f-estado" onchange="pintarEstudiantes()">
+                            <option value="">Todos</option><option>Pendiente</option><option>En curso</option><option>Finalizada</option><option>Aprobada</option><option>Rechazada</option></select></div>
+                        <button class="button-secondary" onclick="limpiarFiltrosEst()">Limpiar</button>
+                    </div>
+                    <table class="apilable">
+                        <thead><tr><th>Estudiante</th><th>Institución</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-estudiantes"></tbody>
                     </table>
+                    <div class="vacio" id="vacio-estudiantes" style="display:none"></div>
                 </div>
+                <div id="avance-detalle" style="margin-top:20px"></div>
             </div>
 
-            <!-- ============ BITÁCORAS POR REVISAR (RF10) ============ -->
+            <!-- BITÁCORAS POR REVISAR -->
             <div id="bitacoras" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Bitácoras por revisar</h1>
-                    <p>Aprueba o rechaza cada entrada de bitácora registrada por tus estudiantes.</p>
-                </div>
-
+                <div class="page-title"><h1>Bitácoras por revisar</h1><p>Revisa, aprueba, califica y retroalimenta las bitácoras de tus estudiantes.</p></div>
                 <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>Estudiante</th><th>Fecha</th><th>Título</th><th>Descripción</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody id="tabla-bitacoras"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ============ EVALUACIONES (RF10) ============ -->
-            <div id="evaluaciones" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Registrar evaluación</h1>
-                    <p>Evalúa el desempeño y registra retroalimentación para un estudiante.</p>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Estudiante</label>
-                            <select id="ev-estudiante">
-                                <option>Laura Fernández</option>
-                                <option>Juan Camilo Rey</option>
-                                <option>María Paz Osorio</option>
-                                <option>Diego Alarcón</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Criterio evaluado</label>
-                            <select id="ev-criterio">
-                                <option>Planeación de clase</option>
-                                <option>Manejo de grupo</option>
-                                <option>Comunicación pedagógica</option>
-                                <option>Uso de material didáctico</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Calificación (1.0 - 5.0)</label>
-                            <input type="number" id="ev-calificacion" min="1" max="5" step="0.1" value="4.5">
-                        </div>
-                        <div class="form-group"><label>&nbsp;</label></div>
-                        <div class="form-group full">
-                            <label>Retroalimentación</label>
-                            <textarea id="ev-retro" placeholder="Escribe una observación constructiva para el estudiante..."></textarea>
-                        </div>
+                    <div class="filtros">
+                        <div class="campo"><label for="fb-estudiante">Estudiante</label><select id="fb-estudiante" onchange="pintarRevisar()"></select></div>
+                        <div class="campo"><label for="fb-estado">Estado</label><select id="fb-estado" onchange="pintarRevisar()">
+                            <option value="">Todos</option><option>Pendiente</option><option>Aprobada</option><option>Requiere corrección</option></select></div>
+                        <button class="button-secondary" onclick="limpiarFiltrosRev()">Limpiar</button>
                     </div>
-                    <button class="button-primary" onclick="guardarEvaluacion()">Guardar evaluación</button>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>Evaluaciones registradas por ti</h3><br>
-                    <table>
-                        <thead><tr><th>Fecha</th><th>Estudiante</th><th>Criterio</th><th>Calificación</th></tr></thead>
-                        <tbody id="tabla-evaluaciones"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ============ REPORTES (RF13) ============ -->
-            <div id="reportes" class="page" style="display:none">
-                <div class="page-title">
-                    <h1>Reportes</h1>
-                    <p>Genera reportes para la dirección del programa y consulta los que te envían tus estudiantes.</p>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Tipo de reporte</label>
-                            <select id="rp-tipo">
-                                <option>Cumplimiento de horas por estudiante</option>
-                                <option>Bitácoras aprobadas / pendientes</option>
-                                <option>Evaluaciones registradas</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Fecha inicial</label><input type="date" id="rp-inicio"></div>
-                        <div class="form-group"><label>Fecha final</label><input type="date" id="rp-fin"></div>
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button class="button-primary" onclick="generarReporte()">📄 Generar reporte</button>
-                        </div>
+                    <div class="tabla-scroll">
+                        <table class="apilable">
+                            <thead><tr><th>Estudiante</th><th>Fecha</th><th>Título</th><th>Descripción</th><th>Evid.</th><th>Horas</th><th>Estado</th><th>Nota</th><th>Acciones</th></tr></thead>
+                            <tbody id="tabla-revisar"></tbody>
+                        </table>
                     </div>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>📥 Reportes recibidos de tus estudiantes</h3><br>
-                    <table>
-                        <thead><tr><th>Fecha</th><th>Estudiante</th><th>Tipo</th><th>Periodo</th><th>Acciones</th></tr></thead>
-                        <tbody id="tabla-reportes-recibidos"></tbody>
-                    </table>
-                </div><br>
-
-                <div class="table-container">
-                    <h3>Reportes que has enviado a dirección</h3><br>
-                    <table>
-                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Enviado a</th></tr></thead>
-                        <tbody id="tabla-reportes-enviados"></tbody>
-                    </table>
+                    <div class="vacio" id="vacio-revisar" style="display:none"></div>
                 </div>
             </div>
 
@@ -241,9 +82,8 @@
     </main>
 </section>
 
-
 <script src="../js/comun.js"></script>
+<script src="../js/datos.js"></script>
 <script src="docente.js"></script>
-
 </body>
 </html>

@@ -24,6 +24,8 @@ async function pintarInicio() {
     document.getElementById("saludo").textContent = "Hola, " + primerNombre(S.nombre);
 
     let pr = (await Datos.obtenerPracticas({})).find(function (p) { return p.estudianteId === MI_ID; });
+    let prReal = await Datos.obtenerPracticaReal(MI_ID);
+    if (prReal) { console.log("Práctica real desde Postgres:", prReal); }
     let bits = await Datos.obtenerBitacoras({ estudianteId: MI_ID });
     let notas = await Datos.obtenerNotasEstudiante(MI_ID);
     let retros = await Datos.obtenerRetroalimentaciones({ estudianteId: MI_ID });
@@ -74,6 +76,16 @@ function tarjeta(titulo, numero, sub, enlace, pagina) {
 async function pintarPractica() {
     let cont = document.getElementById("practica-contenido");
     let pr = (await Datos.obtenerPracticas({})).find(function (p) { return p.estudianteId === MI_ID; });
+    let prReal = await Datos.obtenerPracticaReal(MI_ID);
+    if (prReal) {
+        pr = Object.assign({}, pr, prReal, {
+            institucion: pr ? pr.institucion : "Hospital de Prueba",
+            docente: "Laura Sánchez Gómez",
+            estado: prReal.estado === "aprobada" ? "En curso" : prReal.estado === "pendiente" ? "Pendiente" : "En curso",
+            horasCumplidas: 0, porcentaje: 0, programa: "Licenciatura en Matemáticas",
+            institucionObj: { id: 1, nombre: "Hospital de Prueba" }, tipo: "Práctica clínica", nivel: 1
+        });
+    }
 
     if (!pr) {
         cont.innerHTML = '<div class="card vacio">Aún no tienes una plaza de práctica asignada. Cuando el director de programa te la asigne, la verás aquí.</div>';
@@ -309,7 +321,18 @@ async function guardarBitacora() {
         let datos = { estudianteId: MI_ID, fecha: borrador.fecha, horas: Number(borrador.horas),
             titulo: borrador.titulo, descripcion: borrador.descripcion, evidencias: borrador.evidencias.slice() };
         if (modoCorreccion) { await Datos.corregirBitacora(modoCorreccion, datos); mostrarToast("Bitácora corregida y enviada nuevamente a revisión.", "ok"); }
-        else { await Datos.registrarBitacora(datos); mostrarToast("Bitácora guardada correctamente. Quedó pendiente de revisión por tu docente asesor.", "ok"); }
+        else {
+            await Datos.registrarBitacora(datos);
+            if (MI_ID === 3) {
+                try {
+                    await Datos.registrarBitacoraReal({
+                        actividadId: "68e10d7b4e47ec3fb568914a", estudianteId: MI_ID,
+                        titulo: datos.titulo, fecha: datos.fecha, descripcion: datos.descripcion, horas: datos.horas
+                    });
+                } catch (err) { console.error("No se pudo guardar también en Postgres/Mongo:", err); }
+            }
+            mostrarToast("Bitácora guardada correctamente. Quedó pendiente de revisión por tu docente asesor.", "ok");
+        }
         borrador = vacio();
         await pintarInicio(); await pintarBitacoras();
         mostrarPagina("bitacoras");

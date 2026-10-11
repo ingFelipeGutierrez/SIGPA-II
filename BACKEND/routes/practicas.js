@@ -658,4 +658,104 @@ router.delete("/asignacion-plaza/:id", async (req, res) => {
     }
 });
 
+router.get("/tipos", async (req, res) => {
+    try { res.json((await practicas.query("SELECT * FROM tipo_practica ORDER BY id_tipo_practica")).rows); }
+    catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar tipos" }); }
+});
+router.put("/tipos/:id", async (req, res) => {
+    try {
+        const { nombre, descripcion } = req.body;
+        const r = await practicas.query("UPDATE tipo_practica SET nombre=$1, descripcion=$2 WHERE id_tipo_practica=$3 RETURNING *", [nombre, descripcion, req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrado" });
+        res.json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al actualizar" }); }
+});
+router.delete("/tipos/:id", async (req, res) => {
+    try {
+        const r = await practicas.query("DELETE FROM tipo_practica WHERE id_tipo_practica=$1 RETURNING *", [req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrado" });
+        res.json({ mensaje: "Tipo eliminado" });
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al eliminar (verifica que no tenga grupos asociados)" }); }
+});
+
+router.get("/niveles", async (req, res) => {
+    try { res.json((await practicas.query("SELECT * FROM nivel_practica ORDER BY id_nivel_practica")).rows); }
+    catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar niveles" }); }
+});
+router.put("/niveles/:id", async (req, res) => {
+    try {
+        const { nombre, numero } = req.body;
+        const r = await practicas.query("UPDATE nivel_practica SET nombre=$1, numero=$2 WHERE id_nivel_practica=$3 RETURNING *", [nombre, numero, req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrado" });
+        res.json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al actualizar" }); }
+});
+router.delete("/niveles/:id", async (req, res) => {
+    try {
+        const r = await practicas.query("DELETE FROM nivel_practica WHERE id_nivel_practica=$1 RETURNING *", [req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrado" });
+        res.json({ mensaje: "Nivel eliminado" });
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al eliminar" }); }
+});
+
+router.get("/calificacion-evaluacion", async (req, res) => {
+    try { res.json((await practicas.query("SELECT * FROM calificacion_evaluacion ORDER BY id_calificacion_evaluacion")).rows); }
+    catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar" }); }
+});
+router.post("/calificacion-evaluacion", async (req, res) => {
+    try {
+        const { id_asignacion, docente_id, nota, observaciones } = req.body;
+        const r = await practicas.query(
+            `INSERT INTO calificacion_evaluacion (id_asignacion, docente_id, nota, observaciones) VALUES ($1,$2,$3,$4) RETURNING *`,
+            [id_asignacion, docente_id, nota, observaciones || null]
+        );
+        res.status(201).json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al crear (verifica que id_asignacion exista y no tenga ya evaluación)" }); }
+});
+router.put("/calificacion-evaluacion/:id", async (req, res) => {
+    try {
+        const { nota, observaciones } = req.body;
+        const r = await practicas.query("UPDATE calificacion_evaluacion SET nota=$1, observaciones=$2 WHERE id_calificacion_evaluacion=$3 RETURNING *", [nota, observaciones, req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrada" });
+        res.json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al actualizar" }); }
+});
+router.delete("/calificacion-evaluacion/:id", async (req, res) => {
+    try {
+        const r = await practicas.query("DELETE FROM calificacion_evaluacion WHERE id_calificacion_evaluacion=$1 RETURNING *", [req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Evaluación eliminada" });
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al eliminar" }); }
+});
+
+router.get("/calificacion-bitacora", async (req, res) => {
+    try { res.json((await practicas.query("SELECT * FROM calificacion_bitacora ORDER BY id_calificacion")).rows); }
+    catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar" }); }
+});
+router.post("/calificacion-bitacora", async (req, res) => {
+    try {
+        const { bitacora_id, id_asignacion, docente_id, nota, observaciones } = req.body;
+        const r = await practicas.query(
+            `INSERT INTO calificacion_bitacora (bitacora_id, id_asignacion, docente_id, nota, observaciones) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+            [bitacora_id, id_asignacion, docente_id, nota, observaciones || null]
+        );
+        res.status(201).json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al crear (verifica id_asignacion y que bitacora_id no tenga ya nota)" }); }
+});
+router.put("/calificacion-bitacora/:id", async (req, res) => {
+    try {
+        const { nota, observaciones } = req.body;
+        const r = await practicas.query("UPDATE calificacion_bitacora SET nota=$1, observaciones=$2 WHERE id_calificacion=$3 RETURNING *", [nota, observaciones, req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrada" });
+        res.json(r.rows[0]);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al actualizar" }); }
+});
+router.delete("/calificacion-bitacora/:id", async (req, res) => {
+    try {
+        const r = await practicas.query("DELETE FROM calificacion_bitacora WHERE id_calificacion=$1 RETURNING *", [req.params.id]);
+        if (!r.rows.length) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Calificación eliminada" });
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al eliminar" }); }
+});
+
 module.exports = router;

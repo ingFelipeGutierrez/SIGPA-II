@@ -250,6 +250,7 @@ function construirSemilla() {
 
     const usuarios = [
         { usuario: "estudiante", clave: "123456", rol: "Estudiante", nombre: "Laura Fernández", refId: 1 },
+        { usuario: "mariapaz", clave: "123456", rol: "Estudiante", nombre: "María Paz Osorio", refId: 3 },
         { usuario: "docente", clave: "123456", rol: "Docente Asesor", nombre: "Laura Sánchez", refId: 1 },
         { usuario: "director", clave: "123456", rol: "Director de Programa", nombre: "Ricardo Jaime", refId: 1 }
     ];
@@ -394,6 +395,32 @@ const API = {
             return { id: f.id_usuario, nombre: f.nombre + " " + f.apellido };
         });
     },
+    obtenerEstudiantesDocenteReal: async function (idDocente) {
+        const res = await fetch(API_URL + "/practicas/asignacion-docente");
+        const asigs = await res.json();
+        const mias = asigs.filter(function (a) { return a.id_docente === idDocente && a.estado === "ACTIVO"; });
+
+        const resEst = await fetch(API_URL + "/usuarios/estudiantes-completos");
+        const estudiantes = await resEst.json();
+
+        const resPlaza = await fetch(API_URL + "/practicas/asignacion-plaza");
+        const asignacionesPlaza = await resPlaza.json();
+
+        return mias.map(function (a) {
+            const e = estudiantes.find(function (x) { return x.id_usuario === a.id_estudiante; });
+            const plaza = asignacionesPlaza.filter(function (p) { return p.id_estudiante === a.id_estudiante; })
+                                            .sort(function (x, y) { return y.id_asignacion - x.id_asignacion; })[0];
+            return {
+                estudianteId: a.id_estudiante,
+                estudiante: e ? e.nombre + " " + e.apellido : "—",
+                institucion: "Hospital de Prueba",
+                horasCumplidas: 0,
+                horasRequeridas: plaza ? plaza.horas_requeridas : 160,
+                porcentaje: 0,
+                estado: plaza ? (plaza.estado === "aprobada" ? "En curso" : "Pendiente") : "Pendiente"
+            };
+        });
+    },
 
     cargaDocente: function (id) { return asinc(cargaDocente(id)); },
 
@@ -487,16 +514,15 @@ const API = {
     },
 
     /* ---- Grupos ---- */
-    obtenerGrupos: function (soloVigentes) {
-        let insts = leer("instituciones"); let plazas = leer("plazas");
-        let gs = leer("grupos").map(function (g) {
-            let pl = plazas.find(function (p) { return p.id === g.plazaId; });
-            let inst = pl ? insts.find(function (i) { return i.id === pl.institucionId; }) : null;
-            return Object.assign({}, g, { institucion: inst ? inst.nombre : "—",
-                cuposLibres: pl ? pl.cupos - cuposOcupados(pl.id) : 0 });
+    obtenerGrupos: async function (soloVigentes) {
+        const res = await fetch(API_URL + "/practicas/grupos");
+        const filas = await res.json();
+        let gs = filas.map(function (f) {
+            return { id: f.id_grupo, nombre: f.nombre, institucion: f.tipo_practica + " · " + f.nivel_practica,
+                tipo: f.tipo_practica, nivel: Number((f.nivel_practica.match(/\d+/) || ["1"])[0]),
+                fechaInicio: hoyIso(), fechaFin: masDias(90), horasRequeridas: 160, cuposLibres: 10 };
         });
-        if (soloVigentes) gs = gs.filter(function (g) { return g.fechaFin >= hoyIso(); });
-        return asinc(gs);
+        return gs;
     },
     crearGrupo: function (datos) {
         let plazas = leer("plazas");
@@ -513,31 +539,46 @@ const API = {
         grupos.push(nuevo); escribir("grupos", grupos);
         return asinc(nuevo);
     },
-    asignarEstudiantesAGrupo: function (grupoId, estudiantesIds) {
+    asignarEstudiantesAGrupo: async function (grupoId, estudiantesIds) {
+        for (const eid of estudiantesIds) {
+            try {
+                await fetch(API_URL + "/practicas/grupo-estudiante", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_grupo: Number(grupoId), id_estudiante: eid })
+                });
+            } catch (err) { /* ya existía, seguimos */ }
+        }
+
         let grupos = leer("grupos"); let plazas = leer("plazas"); let insts = leer("instituciones");
         let g = grupos.find(function (x) { return x.id === Number(grupoId); });
-        if (!g) return Promise.reject(ErrorNegocio("NO_EXISTE"));
-        let pl = plazas.find(function (p) { return p.id === g.plazaId; });
-        let libres = pl.cupos - cuposOcupados(pl.id);
-        if (estudiantesIds.length > libres) return Promise.reject(ErrorNegocio("CUPOS_INSUFICIENTES", "El grupo solo tiene " + libres + " cupos libres."));
-        let inst = insts.find(function (i) { return i.id === pl.institucionId; });
-        if (estadoConvenio(inst) === "Vencido") return Promise.reject(ErrorNegocio("CONVENIO_VENCIDO"));
-        let practicas = leer("practicas");
-        estudiantesIds.forEach(function (eid) {
-            let p = practicas.find(function (x) { return x.estudianteId === eid; });
-            if (p) { p.grupoId = g.id; }
-            else { practicas.push({ id: nuevoId("practicas"), estudianteId: eid, grupoId: g.id, docenteId: null,
-                resultado: null, motivoRechazo: "", fechaResultado: null, fechaAsignacion: hoyIso() }); }
-        });
-        escribir("practicas", practicas);
+        if (g) {
+            let practicas = leer("practicas");
+            estudiantesIds.forEach(function (eid) {
+                let p = practicas.find(function (x) { return x.estudianteId === eid; });
+                if (p) { p.grupoId = g.id; }
+                else { practicas.push({ id: nuevoId("practicas"), estudianteId: eid, grupoId: g.id, docenteId: null,
+                    resultado: null, motivoRechazo: "", fechaResultado: null, fechaAsignacion: hoyIso() }); }
+            });
+            escribir("practicas", practicas);
+        }
         return asinc(true);
     },
 
     /* ---- Asignación de docente ---- */
-    asignarDocente: function (estudiantesIds, docenteId) {
+    asignarDocente: async function (estudiantesIds, docenteId) {
         let disponibles = MAX_ESTUDIANTES_DOCENTE - cargaDocente(docenteId);
         if (estudiantesIds.length > disponibles)
             return Promise.reject(ErrorNegocio("SIN_CUPOS_DOCENTE", "El docente asesor solo tiene " + disponibles + " cupos disponibles."));
+
+        for (const eid of estudiantesIds) {
+            try {
+                await fetch(API_URL + "/practicas/asignacion-docente", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_estudiante: eid, id_docente: docenteId })
+                });
+            } catch (err) { /* si ya existía la asignación, seguimos con el resto */ }
+        }
+
         let practicas = leer("practicas");
         estudiantesIds.forEach(function (eid) {
             let p = practicas.find(function (x) { return x.estudianteId === eid; });
@@ -577,6 +618,17 @@ const API = {
         if (filtros.institucionId) lista = lista.filter(function (p) { return p.institucionObj && p.institucionObj.id === filtros.institucionId; });
         return asinc(lista);
     },
+    obtenerPracticaReal: async function (idEstudiante) {
+    const res = await fetch(API_URL + "/practicas/asignacion-plaza");
+    const filas = await res.json();
+    const mia = filas.filter(function (f) { return f.id_estudiante === idEstudiante; })
+                      .sort(function (a, b) { return b.id_asignacion - a.id_asignacion; })[0];
+    if (!mia) return null;
+    return { id: mia.id_asignacion, estudianteId: mia.id_estudiante, grupoId: mia.id_grupo,
+        fechaInicio: mia.fecha_inicio ? mia.fecha_inicio.split("T")[0] : null,
+        fechaFin: mia.fecha_fin ? mia.fecha_fin.split("T")[0] : null,
+        horasRequeridas: mia.horas_requeridas, estado: mia.estado };
+    },
     decidirResultado: function (practicaId, decision, motivo) {
         let practicas = leer("practicas");
         let p = practicas.find(function (x) { return x.id === practicaId; });
@@ -606,6 +658,28 @@ const API = {
         }
         lista.sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : b.id - a.id; });
         return asinc(lista);
+    },
+    obtenerBitacorasDocenteReal: async function (idDocente) {
+        const res = await fetch(API_URL + "/bitacoras/docente-real/" + idDocente);
+        const filas = await res.json();
+        return filas.map(function (f) {
+            return { id: f._id, estudianteId: f.estudiante_id, estudiante: "María Paz Osorio",
+                fecha: f.fecha.split("T")[0], titulo: f.titulo, descripcion: f.descripcion,
+                horas: f.horas_registradas, estado: f.estado === "pendiente" ? "Pendiente" : f.estado === "aprobada" ? "Aprobada" : "Requiere corrección",
+                evidencias: [], nota: null };
+        });
+    },
+    registrarBitacoraReal: async function (datos) {
+        const res = await fetch(API_URL + "/bitacoras", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                actividad_id: datos.actividadId, estudiante_id: datos.estudianteId,
+                titulo: datos.titulo, fecha: datos.fecha, descripcion: datos.descripcion,
+                horas_registradas: Number(datos.horas)
+            })
+        });
+        if (!res.ok) return Promise.reject(ErrorNegocio("ERROR_SERVIDOR"));
+        return res.json();
     },
     registrarBitacora: function (datos) {
         let p = practicaDeEstudiante(datos.estudianteId);

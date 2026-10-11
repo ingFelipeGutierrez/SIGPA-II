@@ -65,6 +65,10 @@ async function cargarFiltros() {
 
 async function pintarEstudiantes() {
     let ests = await Datos.obtenerPracticas({ docenteId: MI_ID });
+    if (MI_ID === 1) {
+        let estsReales = await Datos.obtenerEstudiantesDocenteReal(MI_ID);
+        ests = estsReales.concat(ests);
+    }
     let fi = document.getElementById("f-institucion").value;
     let fe = document.getElementById("f-estado").value;
     let lista = ests.filter(function (p) { return (!fi || p.institucion === fi) && (!fe || p.estado === fe); });
@@ -113,6 +117,10 @@ async function pintarRevisar() {
     let fe = document.getElementById("fb-estudiante").value;
     let fs = document.getElementById("fb-estado").value;
     let bits = await Datos.obtenerBitacoras({ docenteId: MI_ID });
+    if (MI_ID === 1) {
+        let bitsReales = await Datos.obtenerBitacorasDocenteReal(MI_ID);
+        bits = bitsReales.concat(bits);
+    }
     let total = bits.length;
     if (fe) bits = bits.filter(function (b) { return b.estudianteId === Number(fe); });
     if (fs) bits = bits.filter(function (b) { return b.estado === fs; });

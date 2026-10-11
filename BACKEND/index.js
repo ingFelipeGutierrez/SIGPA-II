@@ -8,6 +8,8 @@ const { conectarMongo, getDb } = require("./db/mongo");
 const usuariosRouter = require("./routes/usuarios");
 const practicasRouter = require("./routes/practicas");
 const actividadesRouter = require("./routes/actividades");
+const bitacorasRouter = require("./routes/bitacoras");
+const retroRouter = require("./routes/retroalimentacion");
 
 const app = express();
 app.use(cors());
@@ -16,6 +18,8 @@ app.use(express.json());
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/practicas", practicasRouter);
 app.use("/api/actividades", actividadesRouter);
+app.use("/api/bitacoras", bitacorasRouter);
+app.use("/api/retroalimentacion", retroRouter);
 
 app.get("/api/ping/neondb", async (req, res) => {
     try {

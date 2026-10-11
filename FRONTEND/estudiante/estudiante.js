@@ -132,10 +132,12 @@ function fechaUltimoEstado(pr) {
 }
 
 async function verInstitucion(id) {
-    let inst = (await Datos.obtenerInstituciones()).find(function (i) { return i.id === id; });
+    let inst = await Datos.obtenerInstitucionLocal(id);
+    if (!inst) return;
     abrirModal(inst.nombre,
         linea("Dirección", inst.direccion) + linea("Contacto", inst.contacto) + linea("Tipo de institución", inst.tipo));
 }
+
 function verNivel(n) {
     let nv = Datos.NIVELES[n] || {};
     abrirModal("Nivel " + n, "<p>" + escaparHtml(nv.ampliados || nv.requisitos || "") + "</p>");

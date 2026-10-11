@@ -386,7 +386,15 @@ const API = {
     /* ---- Estudiantes y docentes ---- */
     obtenerEstudiante: function (id) { return asinc(leer("estudiantes").find(function (e) { return e.id === id; }) || null); },
     obtenerEstudiantes: function () { return asinc(leer("estudiantes")); },
-    obtenerDocentes: function () { return asinc(leer("docentes")); },
+
+    obtenerDocentes: async function () {
+        const res = await fetch(API_URL + "/usuarios/docentes-completos");
+        const filas = await res.json();
+        return filas.map(function (f) {
+            return { id: f.id_usuario, nombre: f.nombre + " " + f.apellido };
+        });
+    },
+
     cargaDocente: function (id) { return asinc(cargaDocente(id)); },
 
     /* ---- Instituciones y convenios (CONECTADO AL BACKEND REAL) ---- */
@@ -429,41 +437,53 @@ const API = {
         return res.json();
     },
 
-    /* ---- Plazas ---- */
-    obtenerPlazas: function (filtros) {
-        filtros = filtros || {};
-        let insts = leer("instituciones");
-        let plazas = leer("plazas").map(function (p) {
-            let inst = insts.find(function (i) { return i.id === p.institucionId; });
-            return Object.assign({}, p, { institucion: inst ? inst.nombre : "—",
-                convenioEstado: inst ? estadoConvenio(inst) : "—", convenioFin: inst ? inst.convenioFin : null,
-                ocupados: cuposOcupados(p.id), institucionObj: inst });
-        });
-        if (filtros.estado) plazas = plazas.filter(function (p) { return p.estado === filtros.estado; });
-        return asinc(plazas);
+    // Institución "local" (semilla): usada solo para no cruzar con las instituciones reales de Neon
+    // cuando el estudiante consulta el detalle de SU institución (que viene de la práctica local).
+    obtenerInstitucionLocal: function (id) {
+        let i = leer("instituciones").find(function (x) { return x.id === id; });
+        return asinc(i || null);
     },
-    registrarPlaza: function (datos) {
+
+    /* ---- Plazas (CONECTADO AL BACKEND REAL) ---- */
+    obtenerPlazas: async function (filtros) {
+        const res = await fetch(API_URL + "/practicas/plazas");
+        const filas = await res.json();
+        let plazas = filas.map(function (f) {
+            return { id: f.id_plaza, institucionId: f.institucion_id, institucion: f.institucion,
+                cupos: f.capacidad, jornada: f.jornada, descripcion: "",
+                estado: f.estado === "DISPONIBLE" ? "Aprobada" : f.estado === "PENDIENTE" ? "Pendiente" : "Rechazada",
+                motivoRechazo: "", fechaRegistro: hoyIso(),
+                convenioEstado: "Vigente", ocupados: 0,
+                institucionObj: { id: f.institucion_id, nombre: f.institucion } };
+        });
+        filtros = filtros || {};
+        if (filtros.estado) plazas = plazas.filter(function (p) { return p.estado === filtros.estado; });
+        return plazas;
+    },
+    registrarPlaza: async function (datos) {
         if (!datos.institucionId || !(Number(datos.cupos) > 0) || !datos.jornada)
             return Promise.reject(ErrorNegocio("CAMPOS_INCOMPLETOS"));
-        let plazas = leer("plazas");
-        let nueva = { id: nuevoId("plazas"), institucionId: Number(datos.institucionId), cupos: Number(datos.cupos),
-            jornada: datos.jornada, descripcion: (datos.descripcion || "").trim(), estado: "Pendiente",
-            motivoRechazo: "", fechaRegistro: hoyIso() };
-        plazas.push(nueva); escribir("plazas", plazas);
-        return asinc(nueva);
+        const mapaJornada = { "Mañana": "MAÑANA", "Tarde": "TARDE", "Única": "ÚNICA" };
+        const jornadaDb = mapaJornada[datos.jornada] || datos.jornada.toUpperCase();
+        const res = await fetch(API_URL + "/practicas/plazas", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ institucion_id: Number(datos.institucionId), convenio_id: null,
+                capacidad: Number(datos.cupos), jornada: jornadaDb })
+        });
+        if (!res.ok) return Promise.reject(ErrorNegocio("ERROR_SERVIDOR"));
+        const r = await res.json();
+        return { id: r.id_plaza, institucionId: r.institucion_id, cupos: r.capacidad, jornada: r.jornada, estado: "Pendiente" };
     },
-    decidirPlaza: function (id, decision, motivo) {
-        let plazas = leer("plazas");
-        let p = plazas.find(function (x) { return x.id === id; });
-        if (!p) return Promise.reject(ErrorNegocio("NO_EXISTE"));
-        let inst = leer("instituciones").find(function (i) { return i.id === p.institucionId; });
-        if (decision === "Aprobada" && estadoConvenio(inst) === "Vencido")
-            return Promise.reject(ErrorNegocio("CONVENIO_VENCIDO"));
+    decidirPlaza: async function (id, decision, motivo) {
         if (decision === "Rechazada" && !(motivo || "").trim())
             return Promise.reject(ErrorNegocio("MOTIVO_VACIO"));
-        p.estado = decision; p.motivoRechazo = decision === "Rechazada" ? motivo.trim() : "";
-        escribir("plazas", plazas);
-        return asinc(p);
+        const estadoDb = decision === "Aprobada" ? "DISPONIBLE" : "RECHAZADA";
+        const res = await fetch(API_URL + "/practicas/plazas/" + id, {
+            method: "PUT", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estado: estadoDb })
+        });
+        if (!res.ok) return Promise.reject(ErrorNegocio("ERROR_SERVIDOR"));
+        return res.json();
     },
 
     /* ---- Grupos ---- */

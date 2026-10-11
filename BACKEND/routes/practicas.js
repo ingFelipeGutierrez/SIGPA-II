@@ -361,4 +361,301 @@ router.delete("/grupos/:id", async (req, res) => {
     }
 });
 
+// Traer plazas (con institución)
+router.get("/plazas", async (req, res) => {
+    try {
+        const resultado = await practicas.query(`
+            SELECT p.id_plaza, p.institucion_id, p.convenio_id, p.capacidad, p.estado, p.jornada,
+                   i.nombre AS institucion
+            FROM plaza p JOIN institucion_receptora i ON p.institucion_id = i.id_institucion
+            ORDER BY p.id_plaza
+        `);
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las plazas" });
+    }
+});
+
+// Crear plaza (busca el convenio más reciente de la institución automáticamente)
+router.post("/plazas", async (req, res) => {
+    try {
+        const { institucion_id, capacidad, jornada } = req.body;
+
+        const conv = await practicas.query(
+            `SELECT id_convenio FROM convenio WHERE institucion_id = $1 ORDER BY fecha_inicio DESC LIMIT 1`,
+            [institucion_id]
+        );
+        if (conv.rows.length === 0) {
+            return res.status(400).json({ error: "Esta institución no tiene un convenio registrado" });
+        }
+        const convenioId = conv.rows[0].id_convenio;
+
+        const resultado = await practicas.query(
+            `INSERT INTO plaza (institucion_id, convenio_id, capacidad, jornada)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [institucion_id, convenioId, capacidad, jornada]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al crear la plaza" });
+    }
+});
+
+// Actualizar estado de una plaza (aprobar/rechazar)
+router.put("/plazas/:id", async (req, res) => {
+    try {
+        const { estado } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE plaza SET estado = $1 WHERE id_plaza = $2 RETURNING *`,
+            [estado, req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar la plaza" });
+    }
+});
+
+// Eliminar plaza
+router.delete("/plazas/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query("DELETE FROM plaza WHERE id_plaza = $1 RETURNING *", [req.params.id]);
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Plaza eliminada" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar la plaza (puede tener grupos asociados)" });
+    }
+});
+
+// Traer cupos de todos los docentes
+router.get("/docente-cupo", async (req, res) => {
+    try {
+        const resultado = await practicas.query("SELECT * FROM docente_cupo ORDER BY id_docente");
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar los cupos" });
+    }
+});
+
+// Crear registro de cupo para un docente
+router.post("/docente-cupo", async (req, res) => {
+    try {
+        const { id_docente, cupo_maximo } = req.body;
+        const resultado = await practicas.query(
+            `INSERT INTO docente_cupo (id_docente, cupo_maximo) VALUES ($1, $2) RETURNING *`,
+            [id_docente, cupo_maximo || 6]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al crear el cupo (verifica que el docente exista en neondb)" });
+    }
+});
+
+// Actualizar cupo
+router.put("/docente-cupo/:id", async (req, res) => {
+    try {
+        const { cupo_maximo, activo } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE docente_cupo SET cupo_maximo = $1, activo = $2 WHERE id_docente = $3 RETURNING *`,
+            [cupo_maximo, activo, req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar el cupo" });
+    }
+});
+
+// Eliminar cupo
+router.delete("/docente-cupo/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query("DELETE FROM docente_cupo WHERE id_docente = $1 RETURNING *", [req.params.id]);
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json({ mensaje: "Cupo eliminado" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar el cupo" });
+    }
+});
+
+// Traer asignaciones docente-estudiante (con nombres)
+router.get("/asignacion-docente", async (req, res) => {
+    try {
+        const resultado = await practicas.query(`
+            SELECT ad.id_asignacion_docente, ad.id_estudiante, ad.id_docente, ad.estado, ad.fecha_asignacion
+            FROM asignacion_docente ad ORDER BY ad.id_asignacion_docente
+        `);
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las asignaciones de docente" });
+    }
+});
+
+// Crear asignación (estudiante <-> docente)
+router.post("/asignacion-docente", async (req, res) => {
+    try {
+        const { id_estudiante, id_docente } = req.body;
+        const resultado = await practicas.query(
+            `INSERT INTO asignacion_docente (id_estudiante, id_docente) VALUES ($1, $2) RETURNING *`,
+            [id_estudiante, id_docente]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al crear la asignación (verifica que el docente tenga cupo creado en docente_cupo)" });
+    }
+});
+
+// Actualizar estado (ACTIVO/INACTIVO)
+router.put("/asignacion-docente/:id", async (req, res) => {
+    try {
+        const { estado } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE asignacion_docente SET estado = $1 WHERE id_asignacion_docente = $2 RETURNING *`,
+            [estado, req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar la asignación" });
+    }
+});
+
+// Eliminar asignación
+router.delete("/asignacion-docente/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM asignacion_docente WHERE id_asignacion_docente = $1 RETURNING *", [req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Asignación eliminada" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar la asignación" });
+    }
+});
+
+// Traer asignaciones de grupo
+router.get("/grupo-estudiante", async (req, res) => {
+    try {
+        const resultado = await practicas.query("SELECT * FROM grupo_estudiante ORDER BY id_grupo, id_estudiante");
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar grupo_estudiante" });
+    }
+});
+
+// Crear asignación de grupo
+router.post("/grupo-estudiante", async (req, res) => {
+    try {
+        const { id_grupo, id_estudiante } = req.body;
+        const resultado = await practicas.query(
+            `INSERT INTO grupo_estudiante (id_grupo, id_estudiante) VALUES ($1, $2) RETURNING *`,
+            [id_grupo, id_estudiante]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al crear la asignación de grupo" });
+    }
+});
+
+// Actualizar estado
+router.put("/grupo-estudiante/:idGrupo/:idEstudiante", async (req, res) => {
+    try {
+        const { estado } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE grupo_estudiante SET estado = $1 WHERE id_grupo = $2 AND id_estudiante = $3 RETURNING *`,
+            [estado, req.params.idGrupo, req.params.idEstudiante]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar grupo_estudiante" });
+    }
+});
+
+// Eliminar
+router.delete("/grupo-estudiante/:idGrupo/:idEstudiante", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM grupo_estudiante WHERE id_grupo = $1 AND id_estudiante = $2 RETURNING *",
+            [req.params.idGrupo, req.params.idEstudiante]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Asignación de grupo eliminada" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar grupo_estudiante" });
+    }
+});
+
+// Traer asignaciones de plaza
+router.get("/asignacion-plaza", async (req, res) => {
+    try {
+        const resultado = await practicas.query("SELECT * FROM asignacion_plaza ORDER BY id_asignacion");
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las asignaciones de plaza" });
+    }
+});
+
+// Crear asignación de plaza
+router.post("/asignacion-plaza", async (req, res) => {
+    try {
+        const { id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas } = req.body;
+        const resultado = await practicas.query(
+            `INSERT INTO asignacion_plaza (id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin || null, horas_requeridas || 160]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al crear la asignación de plaza (verifica que exista grupo_estudiante con ese id_grupo+id_estudiante)" });
+    }
+});
+
+// Actualizar estado
+router.put("/asignacion-plaza/:id", async (req, res) => {
+    try {
+        const { estado, motivo_rechazo } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE asignacion_plaza SET estado = $1, motivo_rechazo = $2 WHERE id_asignacion = $3 RETURNING *`,
+            [estado, motivo_rechazo || null, req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar la asignación de plaza" });
+    }
+});
+
+// Eliminar
+router.delete("/asignacion-plaza/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM asignacion_plaza WHERE id_asignacion = $1 RETURNING *", [req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
+        res.json({ mensaje: "Asignación de plaza eliminada" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar la asignación de plaza" });
+    }
+});
+
 module.exports = router;

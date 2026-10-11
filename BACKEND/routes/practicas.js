@@ -329,4 +329,36 @@ router.put("/instituciones-completas/:id/convenio", async (req, res) => {
     }
 });
 
+// Actualizar un grupo de práctica
+router.put("/grupos/:id", async (req, res) => {
+    try {
+        const { nombre, numero_grupo, estado } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE grupo_practica SET nombre=$1, numero_grupo=$2, estado=$3
+             WHERE id_grupo=$4 RETURNING *`,
+            [nombre, numero_grupo, estado, req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar el grupo" });
+    }
+});
+
+// Eliminar un grupo de práctica
+router.delete("/grupos/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM grupo_practica WHERE id_grupo = $1 RETURNING *",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json({ mensaje: "Grupo eliminado" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar el grupo (puede tener convenio asociado)" });
+    }
+});
+
 module.exports = router;

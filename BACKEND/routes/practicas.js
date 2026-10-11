@@ -128,4 +128,62 @@ router.post("/grupos", async (req, res) => {
     }
 });
 
+// Traer todos los convenios por id (uno solo)
+router.get("/convenios/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "SELECT * FROM convenio WHERE id_convenio = $1",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Convenio no encontrado" });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar el convenio" });
+    }
+});
+
+// Actualizar un convenio (Update)
+router.put("/convenios/:id", async (req, res) => {
+    try {
+        const { nombre, fecha_inicio, fecha_fin, estado } = req.body;
+
+        const resultado = await practicas.query(
+            `UPDATE convenio
+             SET nombre = $1, fecha_inicio = $2, fecha_fin = $3, estado = $4
+             WHERE id_convenio = $5
+             RETURNING *`,
+            [nombre, fecha_inicio, fecha_fin, estado, req.params.id]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Convenio no encontrado" });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar el convenio" });
+    }
+});
+
+// Eliminar un convenio (Delete)
+router.delete("/convenios/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM convenio WHERE id_convenio = $1 RETURNING *",
+            [req.params.id]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Convenio no encontrado" });
+        }
+        res.json({ mensaje: "Convenio eliminado", convenio: resultado.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar el convenio" });
+    }
+});
+
 module.exports = router;

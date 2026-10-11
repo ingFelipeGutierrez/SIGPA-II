@@ -186,4 +186,72 @@ router.delete("/convenios/:id", async (req, res) => {
     }
 });
 
+// Traer todas las instituciones
+router.get("/instituciones", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "SELECT * FROM institucion_receptora ORDER BY id_institucion"
+        );
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las instituciones" });
+    }
+});
+
+// Traer una institución por id
+router.get("/instituciones/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "SELECT * FROM institucion_receptora WHERE id_institucion = $1",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Institución no encontrada" });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar la institución" });
+    }
+});
+
+// Actualizar una institución
+router.put("/instituciones/:id", async (req, res) => {
+    try {
+        const { nombre, nit, direccion, tipo } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE institucion_receptora
+             SET nombre = $1, nit = $2, direccion = $3, tipo = $4
+             WHERE id_institucion = $5
+             RETURNING *`,
+            [nombre, nit, direccion, tipo, req.params.id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Institución no encontrada" });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar la institución" });
+    }
+});
+
+// Eliminar una institución
+router.delete("/instituciones/:id", async (req, res) => {
+    try {
+        const resultado = await practicas.query(
+            "DELETE FROM institucion_receptora WHERE id_institucion = $1 RETURNING *",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Institución no encontrada" });
+        }
+        res.json({ mensaje: "Institución eliminada", institucion: resultado.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar la institución" });
+    }
+});
+
 module.exports = router;

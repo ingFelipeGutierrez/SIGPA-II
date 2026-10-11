@@ -254,4 +254,79 @@ router.delete("/instituciones/:id", async (req, res) => {
     }
 });
 
+// Traer instituciones con su convenio más reciente (forma combinada para el frontend)
+router.get("/instituciones-completas", async (req, res) => {
+    try {
+        const resultado = await practicas.query(`
+            SELECT i.id_institucion, i.nombre, i.tipo, i.direccion, i.contacto,
+                   c.id_convenio, c.fecha_inicio, c.fecha_fin
+            FROM institucion_receptora i
+            LEFT JOIN LATERAL (
+                SELECT * FROM convenio
+                WHERE convenio.institucion_id = i.id_institucion
+                ORDER BY fecha_inicio DESC LIMIT 1
+            ) c ON true
+            ORDER BY i.id_institucion
+        `);
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las instituciones" });
+    }
+});
+
+// Crear institución + su convenio inicial, en un solo paso
+router.post("/instituciones-completas", async (req, res) => {
+    const cliente = await practicas.connect();
+    try {
+        const { nombre, tipo, direccion, contacto, convenioInicio, convenioFin } = req.body;
+        const tipoDb = tipo.toUpperCase(); // "Oficial" -> "OFICIAL"
+        const nit = "AUTO-" + Date.now(); // placeholder, el formulario no pide NIT
+
+        await cliente.query("BEGIN");
+
+        const inst = await cliente.query(
+            `INSERT INTO institucion_receptora (nombre, nit, direccion, tipo, contacto)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [nombre, nit, direccion, tipoDb, contacto]
+        );
+
+        const conv = await cliente.query(
+            `INSERT INTO convenio (institucion_id, nombre, fecha_inicio, fecha_fin)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [inst.rows[0].id_institucion, "Convenio " + nombre, convenioInicio, convenioFin]
+        );
+
+        await cliente.query("COMMIT");
+        res.status(201).json({ institucion: inst.rows[0], convenio: conv.rows[0] });
+    } catch (error) {
+        await cliente.query("ROLLBACK");
+        console.error(error);
+        res.status(500).json({ error: "Error al crear la institución" });
+    } finally {
+        cliente.release();
+    }
+});
+
+// Renovar el convenio más reciente de una institución
+router.put("/instituciones-completas/:id/convenio", async (req, res) => {
+    try {
+        const { nuevaFin } = req.body;
+        const resultado = await practicas.query(
+            `UPDATE convenio SET fecha_fin = $1
+             WHERE institucion_id = $2
+             AND id_convenio = (SELECT id_convenio FROM convenio WHERE institucion_id = $2 ORDER BY fecha_inicio DESC LIMIT 1)
+             RETURNING *`,
+            [nuevaFin, req.params.id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "No se encontró el convenio" });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al renovar el convenio" });
+    }
+});
+
 module.exports = router;

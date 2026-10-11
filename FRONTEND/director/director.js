@@ -335,6 +335,7 @@ async function pintarInstituciones() {
     }).join("");
 }
 function abrirFormInstitucion() {
+    document.getElementById("form-institucion").style.display = "block";
     document.getElementById("form-institucion").innerHTML =
         '<div class="card" style="margin-bottom:16px"><div class="form-grid">' +
         '<div class="form-group"><label>Nombre de la institución</label><input type="text" id="i-nombre"></div>' +

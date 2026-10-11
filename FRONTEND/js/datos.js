@@ -361,6 +361,9 @@ function ErrorNegocio(codigo, mensaje) {
 
 const asinc = function (valor) { return Promise.resolve(valor); };
 
+/* ---- URL base del backend ---- */
+const API_URL = "http://localhost:4000/api";
+
 
 /* =========================================================
    5. FUNCIONES PÚBLICAS
@@ -386,40 +389,44 @@ const API = {
     obtenerDocentes: function () { return asinc(leer("docentes")); },
     cargaDocente: function (id) { return asinc(cargaDocente(id)); },
 
-    /* ---- Instituciones y convenios ---- */
-    obtenerInstituciones: function () {
-        let insts = leer("instituciones").map(function (i) {
+    /* ---- Instituciones y convenios (CONECTADO AL BACKEND REAL) ---- */
+    obtenerInstituciones: async function () {
+        const res = await fetch(API_URL + "/practicas/instituciones-completas");
+        const filas = await res.json();
+        return filas.map(function (f) {
+            let i = { id: f.id_institucion, nombre: f.nombre, tipo: f.tipo === "OFICIAL" ? "Oficial" : "Privada",
+                direccion: f.direccion, contacto: f.contacto || "",
+                convenioInicio: f.fecha_inicio ? f.fecha_inicio.split("T")[0] : null,
+                convenioFin: f.fecha_fin ? f.fecha_fin.split("T")[0] : null };
             let plazasInst = leer("plazas").filter(function (p) { return p.institucionId === i.id && p.estado === "Aprobada"; });
             let total = plazasInst.reduce(function (s, p) { return s + p.cupos; }, 0);
             let ocup = plazasInst.reduce(function (s, p) { return s + cuposOcupados(p.id); }, 0);
-            return Object.assign({}, i, { estadoConvenio: estadoConvenio(i), plazasTotales: total, plazasOcupadas: ocup,
-                diasRestantes: diasEntre(hoyIso(), i.convenioFin) });
+            return Object.assign({}, i, { estadoConvenio: i.convenioFin ? estadoConvenio(i) : "—",
+                plazasTotales: total, plazasOcupadas: ocup,
+                diasRestantes: i.convenioFin ? diasEntre(hoyIso(), i.convenioFin) : null });
         });
-        return asinc(insts);
     },
-    registrarInstitucion: function (datos) {
-        let insts = leer("instituciones");
-        let norm = function (s) { return (s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); };
+    registrarInstitucion: async function (datos) {
         if (!datos.nombre || !datos.tipo || !datos.direccion || !datos.contacto || !datos.convenioInicio || !datos.convenioFin)
             return Promise.reject(ErrorNegocio("CAMPOS_INCOMPLETOS"));
         if (datos.convenioFin <= datos.convenioInicio || datos.convenioFin <= hoyIso())
             return Promise.reject(ErrorNegocio("FECHAS_INVALIDAS"));
-        if (insts.some(function (i) { return norm(i.nombre) === norm(datos.nombre); }))
-            return Promise.reject(ErrorNegocio("NOMBRE_REPETIDO"));
-        let nueva = { id: nuevoId("instituciones"), nombre: datos.nombre.trim(), tipo: datos.tipo,
-            direccion: datos.direccion.trim(), contacto: datos.contacto.trim(),
-            convenioInicio: datos.convenioInicio, convenioFin: datos.convenioFin };
-        insts.push(nueva); escribir("instituciones", insts);
-        return asinc(nueva);
+        const res = await fetch(API_URL + "/practicas/instituciones-completas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        });
+        if (!res.ok) return Promise.reject(ErrorNegocio("ERROR_SERVIDOR"));
+        return res.json();
     },
-    renovarConvenio: function (id, nuevaFin) {
-        let insts = leer("instituciones");
-        let i = insts.find(function (x) { return x.id === id; });
-        if (!i) return Promise.reject(ErrorNegocio("NO_EXISTE"));
-        if (nuevaFin <= i.convenioFin || nuevaFin <= hoyIso())
-            return Promise.reject(ErrorNegocio("FECHA_INVALIDA"));
-        i.convenioFin = nuevaFin; escribir("instituciones", insts);
-        return asinc(i);
+    renovarConvenio: async function (id, nuevaFin) {
+        const res = await fetch(API_URL + "/practicas/instituciones-completas/" + id + "/convenio", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nuevaFin: nuevaFin })
+        });
+        if (!res.ok) return Promise.reject(ErrorNegocio("FECHA_INVALIDA"));
+        return res.json();
     },
 
     /* ---- Plazas ---- */

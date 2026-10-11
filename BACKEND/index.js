@@ -5,10 +5,17 @@ require("dotenv").config();
 const neondb = require("./db/neondb");
 const practicas = require("./db/practicas");
 const { conectarMongo, getDb } = require("./db/mongo");
+const usuariosRouter = require("./routes/usuarios");
+const practicasRouter = require("./routes/practicas");
+const actividadesRouter = require("./routes/actividades");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/usuarios", usuariosRouter);
+app.use("/api/practicas", practicasRouter);
+app.use("/api/actividades", actividadesRouter);
 
 app.get("/api/ping/neondb", async (req, res) => {
     try {

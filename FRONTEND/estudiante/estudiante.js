@@ -284,6 +284,23 @@ function siguientePaso(n) { if (!validarPaso(n)) return; pasoActual = n + 1; pas
 function irAPaso(n) { if (n > pasoMaximo) return; leerCampos(); pasoActual = n; renderWizard(); }
 
 document.getElementById("nb-archivos").addEventListener("change", function (e) { agregarArchivos(e.target.files); e.target.value = ""; });
+let zonaArchivos = document.querySelector(".zona-archivos");
+if (zonaArchivos) {
+    ["dragover", "dragenter"].forEach(function (evento) {
+        zonaArchivos.addEventListener(evento, function (e) {
+            e.preventDefault();
+            zonaArchivos.classList.add("arrastrando");
+        });
+    });
+    ["dragleave", "dragend"].forEach(function (evento) {
+        zonaArchivos.addEventListener(evento, function () { zonaArchivos.classList.remove("arrastrando"); });
+    });
+    zonaArchivos.addEventListener("drop", function (e) {
+        e.preventDefault();
+        zonaArchivos.classList.remove("arrastrando");
+        agregarArchivos(e.dataTransfer.files);
+    });
+}
 
 function agregarArchivos(archivos) {
     let errores = [];

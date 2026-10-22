@@ -456,3 +456,128 @@ body.login-body { display: flex; align-items: center; justify-content: center; m
     .menu button { padding: 14px 24px; }
     .button-primary, .button-secondary, .button-danger { padding: 11px 16px; }
 }
+
+/* =========================================================
+   11. MICROINTERACCIONES
+========================================================= */
+
+/* Botones: feedback de presión (se "hunden" al hacer clic) */
+.button-primary, .button-secondary, .button-danger, .login-button {
+    transition: transform 0.08s ease, filter 0.15s ease, background-color 0.15s ease;
+}
+.button-primary:active, .button-secondary:active,
+.button-danger:active, .login-button:active { transform: scale(0.96); }
+
+/* Tarjetas de acción: se elevan al pasar el mouse */
+.tarjeta-accion { transition: box-shadow 0.18s, transform 0.18s; }
+.tarjeta-accion:hover { box-shadow: 0 8px 22px rgba(23, 63, 120, 0.16); transform: translateY(-3px); }
+.tarjeta-accion:active { transform: translateY(-1px) scale(0.99); }
+
+/* Toast: ahora también entra animado (antes solo tenía salida) */
+.toast { animation: toast-entrada 0.3s ease; }
+@keyframes toast-entrada {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Modal: fondo con fundido + caja con leve "rebote" al abrir */
+.modal-fondo { animation: fondo-entrada 0.2s ease; }
+@keyframes fondo-entrada { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-caja { animation: modal-entrada 0.25s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes modal-entrada {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Login: spinner animado mientras valida */
+.login-button.cargando { position: relative; padding-left: 34px; padding-right: 34px; }
+.login-button.cargando::before {
+    content: "";
+    position: absolute; left: 12px; top: 50%; margin-top: -7px;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: girar 0.6s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* Login: el aviso de error "tiembla" para llamar la atención */
+.login-error.agitar { animation: agitar 0.45s; }
+@keyframes agitar {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+
+/* Paneles: entran con leve desvanecido al cambiar de sección en el menú */
+.pagina-entrando { animation: pagina-entrada 0.28s ease; }
+@keyframes pagina-entrada {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bonus accesibilidad: respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* =========================================================
+   12. MICROINTERACCIONES — PARTE 2
+========================================================= */
+
+/* Checkboxes: color de marca + "pop" al marcar (Recordarme y las
+   listas de selección del Director) */
+input[type="checkbox"] {
+    accent-color: var(--acento);
+    transition: transform 0.15s ease;
+}
+input[type="checkbox"]:checked { animation: checkbox-pop 0.2s ease; }
+@keyframes checkbox-pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* Pestañas (panel Docente): la línea inferior se desliza hasta la
+   pestaña activa en vez de saltar */
+.tabs { position: relative; }
+.tabs::after {
+    content: "";
+    position: absolute; bottom: -1px;
+    left: var(--indicador-izq, 0); width: var(--indicador-ancho, 0);
+    height: 2px; background-color: var(--acento);
+    transition: left 0.25s ease, width 0.25s ease;
+}
+
+/* Menú móvil: el ícono gira al abrir/cerrar */
+.hamburguesa { transition: transform 0.2s ease; }
+body.menu-abierto .hamburguesa { transform: rotate(90deg); }
+
+/* Badges ambar/naranja (algo pendiente o por revisar): pulso sutil */
+.badge-ambar, .badge-naranja { animation: pulso-badge 2.2s ease-in-out infinite; }
+@keyframes pulso-badge {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(154, 101, 0, 0); }
+    50%      { box-shadow: 0 0 0 4px rgba(154, 101, 0, 0.14); }
+}
+
+/* Zona de evidencias (panel Estudiante): resalta al arrastrar un
+   archivo encima; cada archivo agregado entra con animación */
+.zona-archivos { transition: border-color 0.15s, background-color 0.15s; }
+.zona-archivos.arrastrando { border-color: var(--acento); background-color: #eef4fc; }
+.lista-archivos li { animation: archivo-entrada 0.25s ease; }
+@keyframes archivo-entrada {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.lista-archivos .quitar { transition: transform 0.15s ease, color 0.15s ease; }
+.lista-archivos .quitar:hover { transform: scale(1.25) rotate(90deg); color: #7a1c15; }
+
+/* Stepper: la línea entre pasos se "llena" con transición */
+.stepper .paso-linea { transition: background-color 0.3s ease; }
+
+/* Opcional — validación en vivo del login (ver paso 4) */
+.input-group input:required:user-invalid { border-color: #b13030; background-color: #fdeaea; }
+.input-group input:required:user-valid   { border-color: #237744; }

@@ -110,7 +110,12 @@ function cerrarSesion() {
 function mostrarPagina(nombre, boton) {
     document.querySelectorAll(".page").forEach(function (p) { p.style.display = "none"; });
     let pagina = document.getElementById(nombre);
-    if (pagina) pagina.style.display = "block";
+    if (pagina) {
+        pagina.style.display = "block";
+        pagina.classList.remove("pagina-entrando");
+        void pagina.offsetWidth; // reinicia la animación aunque sea la misma página
+        pagina.classList.add("pagina-entrando");
+    }
 
     if (!boton) boton = document.querySelector('.menu button[data-pagina="' + nombre + '"]');
     document.querySelectorAll(".menu button").forEach(function (b) { b.classList.remove("active"); });
@@ -135,9 +140,18 @@ function pintarUsuario() {
 /* =========================================================
    4. MENÚ RESPONSIVE (cajón en celular y tablet)
 ========================================================= */
-function alternarMenuMovil() { document.body.classList.toggle("menu-abierto"); }
-function cerrarMenuMovil() { document.body.classList.remove("menu-abierto"); }
-
+function alternarMenuMovil() {
+    document.body.classList.toggle("menu-abierto");
+    sincronizarIconoMenu();
+}
+function cerrarMenuMovil() {
+    document.body.classList.remove("menu-abierto");
+    sincronizarIconoMenu();
+}
+function sincronizarIconoMenu() {
+    let boton = document.querySelector(".hamburguesa");
+    if (boton) boton.textContent = document.body.classList.contains("menu-abierto") ? "✕" : "☰";
+}
 
 /* =========================================================
    5. MENSAJES (toast)
@@ -188,6 +202,16 @@ function abrirModal(titulo, cuerpoHtml, opciones) {
 
     let foco = fondo.querySelector("input, textarea, select, button");
     if (foco) foco.focus();
+
+    // Si el modal abre con una pestaña ya activa, posiciona el indicador de una vez.
+    fondo.querySelectorAll(".tabs").forEach(function (tabs) {
+        let activo = tabs.querySelector(".activa");
+        if (activo) {
+            tabs.style.setProperty("--indicador-izq", activo.offsetLeft + "px");
+            tabs.style.setProperty("--indicador-ancho", activo.offsetWidth + "px");
+        }
+    });
+
     return fondo;
 }
 
@@ -215,6 +239,14 @@ function activarPestana(contenedor, nombre) {
     contenedor.querySelectorAll("[data-tab]").forEach(function (p) {
         p.style.display = p.getAttribute("data-tab") === nombre ? "block" : "none";
     });
+
+    // Desliza el indicador hasta la pestaña recién activada.
+    let tabs = contenedor.querySelector(".tabs");
+    let activo = tabs ? tabs.querySelector('[data-tab-boton="' + nombre + '"]') : null;
+    if (tabs && activo) {
+        tabs.style.setProperty("--indicador-izq", activo.offsetLeft + "px");
+        tabs.style.setProperty("--indicador-ancho", activo.offsetWidth + "px");
+    }
 }
 
 

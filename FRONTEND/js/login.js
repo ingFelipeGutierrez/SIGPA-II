@@ -38,6 +38,9 @@ function mostrarError(mensaje) {
     let caja = document.getElementById("login-error");
     caja.textContent = mensaje;
     caja.classList.add("visible");
+    caja.classList.remove("agitar");
+    void caja.offsetWidth; // reinicia la animación si falla dos veces seguidas
+    caja.classList.add("agitar");
 }
 
 async function iniciarSesion() {

@@ -49,8 +49,23 @@ app.get("/api/ping/mongo", async (req, res) => {
     }
 });
 
+app.get("/api/ping/mongo", async (req, res) => {
+    // ... (tu código actual, no lo toques)
+});
+
+// 1) RUTA RAÍZ: va aquí, después de los ping y antes de PORT
+app.get("/", (req, res) => {
+    res.json({ servicio: "SIGPA-II API", estado: "activo" });
+});
+
+// 2) ARRANQUE: reemplaza lo que tenías desde const PORT hasta el final
 const PORT = process.env.PORT || 4000;
 
-conectarMongo().then(() => {
-    app.listen(PORT, () => console.log(`Backend corriendo en http://localhost:${PORT}`));
-});
+if (process.env.VERCEL) {
+    conectarMongo();
+    module.exports = app;
+} else {
+    conectarMongo().then(() => {
+        app.listen(PORT, () => console.log(`Backend en http://localhost:${PORT}`));
+    });
+}

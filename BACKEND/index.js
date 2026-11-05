@@ -15,6 +15,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Espera a que Mongo esté conectado antes de atender cualquier ruta
+app.use(async (req, res, next) => {
+    try {
+        await conectarMongo();
+        next();
+    } catch (e) {
+        res.status(500).json({ error: "No se pudo conectar a MongoDB", detalle: e.message });
+    }
+});
+
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/practicas", practicasRouter);
 app.use("/api/actividades", actividadesRouter);
@@ -62,7 +72,6 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 4000;
 
 if (process.env.VERCEL) {
-    conectarMongo();
     module.exports = app;
 } else {
     conectarMongo().then(() => {

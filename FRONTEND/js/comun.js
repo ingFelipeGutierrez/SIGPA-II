@@ -88,6 +88,23 @@ function badge(estado) {
 }
 
 
+// Tarjeta de resumen del dashboard (la usan los tres paneles).
+//   titulo  : nombre del indicador            numero : valor grande (puede ser HTML, ej. un badge)
+//   info    : texto corto que explica qué mide el número
+//   sub     : dato extra opcional (ej. el nombre de la institución)
+//   enlace  : texto del enlace                accion : código JS que se ejecuta al hacer clic
+// El enlace es un botón real (se alcanza con Tab) y su área cubre toda la tarjeta.
+function tarjetaResumen(op) {
+    return '<div class="card stat-card">' +
+        '<div class="stat-title">' + op.titulo + "</div>" +
+        '<div class="stat-number">' + op.numero + "</div>" +
+        '<div class="stat-info">' + escaparHtml(op.info) + "</div>" +
+        (op.sub ? '<div class="stat-sub">' + escaparHtml(op.sub) + "</div>" : "") +
+        '<button type="button" class="stat-link" onclick="' + op.accion + '"><span>' + escaparHtml(op.enlace) + "</span></button>" +
+        "</div>";
+}
+
+
 /* =========================================================
    3. SESIÓN Y NAVEGACIÓN
 ========================================================= */
@@ -110,12 +127,7 @@ function cerrarSesion() {
 function mostrarPagina(nombre, boton) {
     document.querySelectorAll(".page").forEach(function (p) { p.style.display = "none"; });
     let pagina = document.getElementById(nombre);
-    if (pagina) {
-        pagina.style.display = "block";
-        pagina.classList.remove("pagina-entrando");
-        void pagina.offsetWidth; // reinicia la animación aunque sea la misma página
-        pagina.classList.add("pagina-entrando");
-    }
+    if (pagina) pagina.style.display = "block";
 
     if (!boton) boton = document.querySelector('.menu button[data-pagina="' + nombre + '"]');
     document.querySelectorAll(".menu button").forEach(function (b) { b.classList.remove("active"); });
@@ -123,6 +135,7 @@ function mostrarPagina(nombre, boton) {
 
     cerrarMenuMovil();
     window.scrollTo(0, 0);
+    if (pagina) animarContadores(pagina);
 }
 
 // Pinta el nombre, el rol y el avatar en la barra superior.
@@ -140,18 +153,9 @@ function pintarUsuario() {
 /* =========================================================
    4. MENÚ RESPONSIVE (cajón en celular y tablet)
 ========================================================= */
-function alternarMenuMovil() {
-    document.body.classList.toggle("menu-abierto");
-    sincronizarIconoMenu();
-}
-function cerrarMenuMovil() {
-    document.body.classList.remove("menu-abierto");
-    sincronizarIconoMenu();
-}
-function sincronizarIconoMenu() {
-    let boton = document.querySelector(".hamburguesa");
-    if (boton) boton.textContent = document.body.classList.contains("menu-abierto") ? "✕" : "☰";
-}
+function alternarMenuMovil() { document.body.classList.toggle("menu-abierto"); }
+function cerrarMenuMovil() { document.body.classList.remove("menu-abierto"); }
+
 
 /* =========================================================
    5. MENSAJES (toast)
@@ -202,23 +206,17 @@ function abrirModal(titulo, cuerpoHtml, opciones) {
 
     let foco = fondo.querySelector("input, textarea, select, button");
     if (foco) foco.focus();
-
-    // Si el modal abre con una pestaña ya activa, posiciona el indicador de una vez.
-    fondo.querySelectorAll(".tabs").forEach(function (tabs) {
-        let activo = tabs.querySelector(".activa");
-        if (activo) {
-            tabs.style.setProperty("--indicador-izq", activo.offsetLeft + "px");
-            tabs.style.setProperty("--indicador-ancho", activo.offsetWidth + "px");
-        }
-    });
-
     return fondo;
 }
 
 function cerrarModal() {
-    let modales = document.querySelectorAll(".modal-fondo");
-    if (modales.length) modales[modales.length - 1].remove();
-    if (!document.querySelectorAll(".modal-fondo").length) document.body.classList.remove("con-modal");
+    // Solo cuenta los que no se están cerrando; el último abierto es el que sale.
+    let abiertos = document.querySelectorAll(".modal-fondo:not(.cerrando)");
+    if (!abiertos.length) return;
+    let fondo = abiertos[abiertos.length - 1];
+    fondo.classList.add("cerrando");               // el CSS hace el fundido (0.16 s)
+    if (abiertos.length === 1) document.body.classList.remove("con-modal");
+    setTimeout(function () { fondo.remove(); }, 170);
 }
 
 document.addEventListener("keydown", function (e) {
@@ -239,14 +237,6 @@ function activarPestana(contenedor, nombre) {
     contenedor.querySelectorAll("[data-tab]").forEach(function (p) {
         p.style.display = p.getAttribute("data-tab") === nombre ? "block" : "none";
     });
-
-    // Desliza el indicador hasta la pestaña recién activada.
-    let tabs = contenedor.querySelector(".tabs");
-    let activo = tabs ? tabs.querySelector('[data-tab-boton="' + nombre + '"]') : null;
-    if (tabs && activo) {
-        tabs.style.setProperty("--indicador-izq", activo.offsetLeft + "px");
-        tabs.style.setProperty("--indicador-ancho", activo.offsetWidth + "px");
-    }
 }
 
 
@@ -260,4 +250,71 @@ function etiquetarCeldas(tabla, etiquetas) {
             if (etiquetas[i]) td.setAttribute("data-label", etiquetas[i]);
         });
     });
+}
+
+
+/* =========================================================
+   9. MICROINTERACCIONES (la parte visual está en comun.css, sección 12)
+========================================================= */
+const REDUCIR_MOVIMIENTO = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Pie de página: el año se actualiza solo.
+(function () {
+    let anio = document.getElementById("anio-copy");
+    if (anio) anio.textContent = new Date().getFullYear();
+})();
+
+// Barra superior: sombra suave cuando la página tiene scroll.
+window.addEventListener("scroll", function () {
+    document.body.classList.toggle("con-scroll", window.scrollY > 4);
+}, { passive: true });
+
+// Contadores: los números de las tarjetas "suben" desde 0 hasta su valor.
+// Solo se animan números simples (12, 75%, 8 h). Textos como "45 / 120" se dejan igual.
+const SELECTOR_CONTADORES = ".stat-number, .hours-number";
+const CONTADORES_VISTOS = {};   // evita repetir la animación cuando solo se vuelve a pintar lo mismo
+
+function animarContadores(raiz) {
+    if (REDUCIR_MOVIMIENTO || !raiz || raiz.nodeType !== 1) return;
+    let lista = Array.prototype.slice.call(raiz.querySelectorAll(SELECTOR_CONTADORES));
+    if (raiz.matches(SELECTOR_CONTADORES)) lista.unshift(raiz);
+    lista.forEach(animarContador);
+}
+
+function animarContador(el) {
+    if (el.offsetParent === null) return;   // página oculta: se anima cuando se muestre
+    let m = el.textContent.trim().match(/^(\D*?)(\d+(?:\.\d+)?)(\D*)$/);
+    if (!m) return;
+
+    let destino = parseFloat(m[2]);
+    if (!destino) return;
+
+    let tarjeta = el.closest(".card");
+    let titulo = tarjeta && tarjeta.querySelector(".stat-title");
+    let clave = (titulo ? titulo.textContent : el.className) + "|" + m[2];
+    if (CONTADORES_VISTOS[clave]) return;
+    CONTADORES_VISTOS[clave] = true;
+
+    let decimales = (m[2].split(".")[1] || "").length;
+    let duracion = 700;
+    let inicio = null;
+
+    el.textContent = m[1] + (0).toFixed(decimales) + m[3];
+    function paso(t) {
+        if (inicio === null) inicio = t;
+        let p = Math.min((t - inicio) / duracion, 1);
+        let valor = destino * (1 - Math.pow(1 - p, 3));      // arranca rápido y frena al final
+        el.textContent = m[1] + valor.toFixed(decimales) + m[3];
+        if (p < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+}
+
+// Los paneles pintan sus tarjetas con innerHTML: este observador detecta lo nuevo y lo anima.
+if (!REDUCIR_MOVIMIENTO) {
+    new MutationObserver(function (cambios) {
+        cambios.forEach(function (c) {
+            c.addedNodes.forEach(function (n) { animarContadores(n); });
+        });
+    }).observe(document.body, { childList: true, subtree: true });
 }

@@ -31,10 +31,18 @@ async function pintarInicio() {
     let retros = await Datos.obtenerRetroalimentaciones({ estudianteId: MI_ID });
 
     document.getElementById("kpis").innerHTML =
-        tarjeta("Práctica asignada", pr ? badge(pr.estado) : "Sin asignar", pr ? pr.institucion : "", "Ver práctica", "practica") +
-        tarjeta("Horas cumplidas", pr ? formatearHoras(pr.horasCumplidas) + " / " + pr.horasRequeridas : "—", "", "Ver avance de horas", "practica") +
-        tarjeta("Bitácoras registradas", bits.length, "", "Ver bitácoras", "bitacoras") +
-        tarjeta("Evaluaciones recibidas", notas.length, "", "Ver evaluaciones", "evaluaciones");
+        tarjetaResumen({ titulo: "Práctica asignada", numero: pr ? badge(pr.estado) : "Sin asignar",
+            info: "Estado de tu práctica en la institución receptora.", sub: pr ? pr.institucion : "",
+            enlace: "Ver práctica", accion: "mostrarPagina('practica')" }) +
+        tarjetaResumen({ titulo: "Horas cumplidas", numero: pr ? formatearHoras(pr.horasCumplidas) + " / " + pr.horasRequeridas : "—",
+            info: "Horas de bitácoras aprobadas frente al total que debes completar.",
+            enlace: "Ver avance de horas", accion: "mostrarPagina('practica')" }) +
+        tarjetaResumen({ titulo: "Bitácoras registradas", numero: bits.length,
+            info: "Actividades que has reportado durante tu práctica.",
+            enlace: "Ver bitácoras", accion: "mostrarPagina('bitacoras')" }) +
+        tarjetaResumen({ titulo: "Evaluaciones recibidas", numero: notas.length,
+            info: "Notas que tu docente asesor ya te asignó.",
+            enlace: "Ver evaluaciones", accion: "mostrarPagina('evaluaciones')" });
 
     // Últimas actividades (movimientos reales)
     let mov = [];
@@ -62,12 +70,6 @@ async function pintarInicio() {
         (corr ? '<div class="aviso aviso-naranja" style="margin-top:10px">⚠️ Tienes ' + corr + " bitácora(s) que requieren corrección. <button class='enlace-accion' onclick=\"mostrarPagina('bitacoras')\">Ver bitácoras</button></div>" : "");
 }
 
-function tarjeta(titulo, numero, sub, enlace, pagina) {
-    return '<div class="card stat-card"><div class="stat-title">' + titulo + '</div>' +
-        '<div class="stat-number">' + numero + "</div>" +
-        (sub ? '<div style="font-size:12px;color:var(--gris-texto);margin-bottom:6px">' + escaparHtml(sub) + "</div>" : "") +
-        '<div class="stat-link" onclick="mostrarPagina(\'' + pagina + "')\">" + enlace + "</div></div>";
-}
 
 
 /* =========================================================
@@ -284,23 +286,6 @@ function siguientePaso(n) { if (!validarPaso(n)) return; pasoActual = n + 1; pas
 function irAPaso(n) { if (n > pasoMaximo) return; leerCampos(); pasoActual = n; renderWizard(); }
 
 document.getElementById("nb-archivos").addEventListener("change", function (e) { agregarArchivos(e.target.files); e.target.value = ""; });
-let zonaArchivos = document.querySelector(".zona-archivos");
-if (zonaArchivos) {
-    ["dragover", "dragenter"].forEach(function (evento) {
-        zonaArchivos.addEventListener(evento, function (e) {
-            e.preventDefault();
-            zonaArchivos.classList.add("arrastrando");
-        });
-    });
-    ["dragleave", "dragend"].forEach(function (evento) {
-        zonaArchivos.addEventListener(evento, function () { zonaArchivos.classList.remove("arrastrando"); });
-    });
-    zonaArchivos.addEventListener("drop", function (e) {
-        e.preventDefault();
-        zonaArchivos.classList.remove("arrastrando");
-        agregarArchivos(e.dataTransfer.files);
-    });
-}
 
 function agregarArchivos(archivos) {
     let errores = [];

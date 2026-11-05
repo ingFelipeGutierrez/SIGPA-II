@@ -37,11 +37,17 @@ document.getElementById("ver-clave").addEventListener("click", function () {
 function mostrarError(mensaje) {
     let caja = document.getElementById("login-error");
     caja.textContent = mensaje;
+    caja.classList.remove("visible");
+    void caja.offsetWidth;              // reinicia la animación: la caja se sacude en cada intento fallido
     caja.classList.add("visible");
-    caja.classList.remove("agitar");
-    void caja.offsetWidth; // reinicia la animación si falla dos veces seguidas
-    caja.classList.add("agitar");
 }
+
+// El mensaje de error se esconde en cuanto la persona vuelve a escribir.
+["usuario", "password"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+        document.getElementById("login-error").classList.remove("visible");
+    });
+});
 
 async function iniciarSesion() {
     let usuario = document.getElementById("usuario").value.trim();

@@ -38,10 +38,18 @@ async function pintarInicio() {
     let promedio = activos.length ? Math.round(activos.reduce(function (s, p) { return s + p.porcentaje; }, 0) / activos.length) : 0;
 
     document.getElementById("kpis").innerHTML =
-        tarjetaKpi("Prácticas en curso", enCurso) +
-        tarjetaKpi("Convenios vigentes", vigentes, prox + " próximos a vencer") +
-        tarjetaKpi("Plazas disponibles", libres) +
-        tarjetaKpi("Cumplimiento promedio", promedio + "%");
+        tarjetaResumen({ titulo: "Prácticas en curso", numero: enCurso,
+            info: "Estudiantes que hoy realizan su práctica en una institución.",
+            enlace: "Ver prácticas en curso", accion: "irEstado('En curso')" }) +
+        tarjetaResumen({ titulo: "Convenios vigentes", numero: vigentes,
+            info: "Convenios activos con instituciones receptoras.", sub: prox + (prox === 1 ? " próximo a vencer" : " próximos a vencer"),
+            enlace: "Ver convenios", accion: "mostrarPagina('instituciones')" }) +
+        tarjetaResumen({ titulo: "Plazas disponibles", numero: libres,
+            info: "Cupos libres en plazas de práctica ya aprobadas.",
+            enlace: "Ver plazas", accion: "irAccion('plazas-aprobadas')" }) +
+        tarjetaResumen({ titulo: "Cumplimiento promedio", numero: promedio + "%",
+            info: "Avance promedio de horas de las prácticas en curso y finalizadas.",
+            enlace: "Ver supervisión de horas", accion: "mostrarPagina('supervision')" });
 
     // Alertas
     let conPractica = pr.map(function (p) { return p.estudianteId; });
@@ -82,7 +90,13 @@ function irAccion(cual) {
     if (cual === "docente") accionDocente();
     else if (cual === "grupo") accionGrupo();
     else if (cual === "plazas") accionPlazas();
+    else if (cual === "plazas-aprobadas") accionPlazas("Aprobada");   // solo las plazas ya aprobadas (con cupos)
     else if (cual === "resultado") accionResultado();
+}
+// Abre "Estado de las prácticas" con el estado ya seleccionado (lo usan las tarjetas del inicio).
+function irEstado(estado) {
+    mostrarPagina("estado");
+    seleccionarEstado(estado);
 }
 
 

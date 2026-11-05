@@ -29,10 +29,18 @@ async function pintarInicio() {
     let promedio = activos.length ? Math.round(activos.reduce(function (s, p) { return s + p.porcentaje; }, 0) / activos.length) : 0;
 
     document.getElementById("kpis").innerHTML =
-        tarjeta("Estudiantes a cargo", ests.length, "Ver estudiantes", "estudiantes") +
-        tarjeta("Bitácoras por revisar", porRevisar, "Revisar ahora", "bitacoras") +
-        tarjeta("Avance promedio de horas", promedio + "%", "Ver detalle", "estudiantes") +
-        tarjeta("Bitácoras sin nota", sinNota, "Calificar", "bitacoras");
+        tarjetaResumen({ titulo: "Estudiantes a cargo", numero: ests.length,
+            info: "Estudiantes en práctica que tienes asignados como asesor.",
+            enlace: "Ver estudiantes", accion: "mostrarPagina('estudiantes')" }) +
+        tarjetaResumen({ titulo: "Bitácoras por revisar", numero: porRevisar,
+            info: "Bitácoras pendientes de tu aprobación o corrección.",
+            enlace: "Revisar ahora", accion: "mostrarPagina('bitacoras')" }) +
+        tarjetaResumen({ titulo: "Avance promedio de horas", numero: promedio + "%",
+            info: "Promedio de horas aprobadas de tus estudiantes frente a lo requerido.",
+            enlace: "Ver detalle", accion: "mostrarPagina('estudiantes')" }) +
+        tarjetaResumen({ titulo: "Bitácoras sin nota", numero: sinNota,
+            info: "Bitácoras aprobadas que aún no tienen calificación.",
+            enlace: "Calificar", accion: "mostrarPagina('bitacoras')" });
 
     let ultimas = bits.slice(0, 5);
     document.getElementById("ultimas-bitacoras").innerHTML = ultimas.length
@@ -46,9 +54,6 @@ async function pintarInicio() {
         : '<div class="vacio">No tienes estudiantes asignados.</div>';
 }
 
-function tarjeta(titulo, numero, enlace, pagina) {
-    return '<div class="card stat-card"><div class="stat-title">' + titulo + '</div><div class="stat-number">' + numero + '</div><div class="stat-link" onclick="mostrarPagina(\'' + pagina + "')\">" + enlace + "</div></div>";
-}
 
 
 /* =========================================================

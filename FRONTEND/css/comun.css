@@ -12,6 +12,8 @@
      3. Diseño (sidebar/topbar)  8. Formulario por pasos (stepper)
      4. Tarjetas y tablas        9. Login
      5. Botones y badges        10. Responsive (celular y tablet)
+                                11. Pie de página (copyright)
+                                12. Microinteracciones
    ========================================================================= */
 
 
@@ -26,6 +28,12 @@
     --texto: #26354d;
     --gris-texto: #777;
     --borde: #e2e6eb;
+
+    /* Movimiento: una sola curva y tres duraciones para todo el sistema */
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --t-rapida: 0.15s;
+    --t-normal: 0.25s;
+    --t-lenta: 0.4s;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -155,11 +163,21 @@ body.rol-director   { --acento: #c9820f; }  /* dorado */
     border-radius: 8px;
     padding: 20px 22px;
 }
-.stat-card { border-top: 3px solid var(--acento); }
+.stat-card { border-top: 3px solid var(--acento); position: relative; display: flex; flex-direction: column; }
 .stat-title { color: var(--gris-texto); font-size: 13px; margin-bottom: 8px; }
 .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 6px; }
 .stat-link { color: var(--acento); font-size: 13px; cursor: pointer; font-weight: bold; }
 .stat-link:hover { text-decoration: underline; }
+
+/* Tarjetas de resumen del inicio: texto informativo + enlace siempre al fondo */
+.stat-info { font-size: 12px; color: var(--gris-texto); line-height: 1.45; margin-bottom: 6px; }
+.stat-sub  { font-size: 12px; color: #4a5568; font-weight: bold; margin-bottom: 6px; }
+button.stat-link {
+    background: none; border: none; padding: 0; font-family: inherit; text-align: left;
+    align-self: flex-start; margin-top: auto; padding-top: 10px;
+}
+/* El enlace cubre toda la tarjeta: se puede hacer clic en cualquier parte de ella */
+button.stat-link::after { content: ""; position: absolute; inset: 0; border-radius: 8px; }
 
 .section-title { font-size: 15px; font-weight: bold; color: var(--acento); margin-bottom: 14px; }
 .activity { padding: 10px 0; border-bottom: 1px solid var(--borde); font-size: 14px; }
@@ -457,127 +475,201 @@ body.login-body { display: flex; align-items: center; justify-content: center; m
     .button-primary, .button-secondary, .button-danger { padding: 11px 16px; }
 }
 
+
 /* =========================================================
-   11. MICROINTERACCIONES
+   11. PIE DE PÁGINA (copyright)
+   Va dentro de .main, después de .content: en los tres paneles
+   y NO en el login. Como .content tiene flex:1, siempre queda
+   pegado al fondo aunque la página tenga poco contenido.
+========================================================= */
+.footer-copy {
+    padding: 16px 30px calc(16px + env(safe-area-inset-bottom, 0px));
+    background-color: white;
+    border-top: 1px solid var(--borde);
+    text-align: center;
+    font-size: 12px;
+    color: var(--gris-texto);
+}
+.footer-copy .marca {
+    color: var(--acento);
+    letter-spacing: 0;
+    transition: letter-spacing var(--t-normal) var(--ease);
+}
+.footer-copy:hover .marca { letter-spacing: 1.5px; }
+
+
+/* =========================================================
+   12. MICROINTERACCIONES
+   Solo CSS (más un poco de JS en comun.js para los contadores
+   y el cierre de modales). Reglas:
+     · Solo se animan transform y opacity (no estorban al layout).
+     · Todo es corto: 150 a 400 ms.
+     · Si la persona tiene "reducir movimiento" activado, se apaga todo.
 ========================================================= */
 
-/* Botones: feedback de presión (se "hunden" al hacer clic) */
-.button-primary, .button-secondary, .button-danger, .login-button {
-    transition: transform 0.08s ease, filter 0.15s ease, background-color 0.15s ease;
-}
-.button-primary:active, .button-secondary:active,
-.button-danger:active, .login-button:active { transform: scale(0.96); }
-
-/* Tarjetas de acción: se elevan al pasar el mouse */
-.tarjeta-accion { transition: box-shadow 0.18s, transform 0.18s; }
-.tarjeta-accion:hover { box-shadow: 0 8px 22px rgba(23, 63, 120, 0.16); transform: translateY(-3px); }
-.tarjeta-accion:active { transform: translateY(-1px) scale(0.99); }
-
-/* Toast: ahora también entra animado (antes solo tenía salida) */
-.toast { animation: toast-entrada 0.3s ease; }
-@keyframes toast-entrada {
-    from { opacity: 0; transform: translateX(24px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
-/* Modal: fondo con fundido + caja con leve "rebote" al abrir */
-.modal-fondo { animation: fondo-entrada 0.2s ease; }
-@keyframes fondo-entrada { from { opacity: 0; } to { opacity: 1; } }
-
-.modal-caja { animation: modal-entrada 0.25s cubic-bezier(.2, .9, .3, 1.2); }
-@keyframes modal-entrada {
-    from { opacity: 0; transform: translateY(14px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Login: spinner animado mientras valida */
-.login-button.cargando { position: relative; padding-left: 34px; padding-right: 34px; }
-.login-button.cargando::before {
-    content: "";
-    position: absolute; left: 12px; top: 50%; margin-top: -7px;
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.45);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: girar 0.6s linear infinite;
+/* --- Animaciones base --- */
+@keyframes aparecer        { from { opacity: 0; } to { opacity: 1; } }
+@keyframes aparecer-arriba { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes modal-entra     { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes toast-entra     { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes llenar-barra    { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes cuenta-atras    { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes sacudir {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
 }
 @keyframes girar { to { transform: rotate(360deg); } }
+@keyframes pop   { 0% { transform: scale(0.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 
-/* Login: el aviso de error "tiembla" para llamar la atención */
-.login-error.agitar { animation: agitar 0.45s; }
-@keyframes agitar {
-    10%, 90% { transform: translateX(-1px); }
-    20%, 80% { transform: translateX(2px); }
-    30%, 50%, 70% { transform: translateX(-4px); }
-    40%, 60% { transform: translateX(4px); }
+/* --- Cambio de página: aparece suave (al pasar de display:none a block se reinicia solo) --- */
+.page { animation: aparecer var(--t-normal) ease-out; }
+
+/* --- Botones: se elevan al pasar el mouse y se hunden al presionar --- */
+.button-primary, .button-secondary, .button-danger, .login-button {
+    transition: transform var(--t-rapida) var(--ease), box-shadow var(--t-rapida) var(--ease),
+                filter var(--t-rapida), background-color var(--t-rapida);
+}
+.button-primary:hover:not(:disabled), .button-secondary:hover:not(:disabled),
+.button-danger:hover:not(:disabled), .login-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(23, 63, 120, 0.18);
+}
+.button-primary:active:not(:disabled), .button-secondary:active:not(:disabled),
+.button-danger:active:not(:disabled), .login-button:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    box-shadow: none;
+}
+.hamburguesa { transition: transform var(--t-rapida); }
+.hamburguesa:active { transform: scale(0.88); }
+
+/* Foco visible para quien navega con teclado */
+button:focus-visible, a:focus-visible, .stat-link:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
 }
 
-/* Paneles: entran con leve desvanecido al cambiar de sección en el menú */
-.pagina-entrando { animation: pagina-entrada 0.28s ease; }
-@keyframes pagina-entrada {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Bonus accesibilidad: respeta a quien prefiere menos movimiento */
-@media (prefers-reduced-motion: reduce) {
-    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-}
-
-/* =========================================================
-   12. MICROINTERACCIONES — PARTE 2
-========================================================= */
-
-/* Checkboxes: color de marca + "pop" al marcar (Recordarme y las
-   listas de selección del Director) */
-input[type="checkbox"] {
-    accent-color: var(--acento);
-    transition: transform 0.15s ease;
-}
-input[type="checkbox"]:checked { animation: checkbox-pop 0.2s ease; }
-@keyframes checkbox-pop {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.25); }
-    100% { transform: scale(1); }
-}
-
-/* Pestañas (panel Docente): la línea inferior se desliza hasta la
-   pestaña activa en vez de saltar */
-.tabs { position: relative; }
-.tabs::after {
+/* Botón "cargando": mini spinner a la derecha del texto */
+button.cargando::after {
     content: "";
-    position: absolute; bottom: -1px;
-    left: var(--indicador-izq, 0); width: var(--indicador-ancho, 0);
-    height: 2px; background-color: var(--acento);
-    transition: left 0.25s ease, width 0.25s ease;
+    display: inline-block;
+    width: 12px; height: 12px;
+    margin-left: 8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -2px;
+    animation: girar 0.7s linear infinite;
 }
 
-/* Menú móvil: el ícono gira al abrir/cerrar */
-.hamburguesa { transition: transform 0.2s ease; }
-body.menu-abierto .hamburguesa { transform: rotate(90deg); }
+/* --- Menú lateral: el texto se desliza un poco al pasar el mouse --- */
+.menu button { transition: background-color var(--t-rapida), color var(--t-rapida), padding-left var(--t-rapida) var(--ease), border-color var(--t-normal); }
+.menu button:hover { padding-left: 28px; }
+.menu button.active:hover { padding-left: 24px; }
 
-/* Badges ambar/naranja (algo pendiente o por revisar): pulso sutil */
-.badge-ambar, .badge-naranja { animation: pulso-badge 2.2s ease-in-out infinite; }
-@keyframes pulso-badge {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(154, 101, 0, 0); }
-    50%      { box-shadow: 0 0 0 4px rgba(154, 101, 0, 0.14); }
+/* --- Barra superior: sombra suave cuando se hace scroll (clase la pone comun.js) --- */
+.topbar { transition: box-shadow var(--t-normal); }
+body.con-scroll .topbar { box-shadow: 0 3px 12px rgba(23, 63, 120, 0.08); }
+.avatar { transition: transform var(--t-normal) var(--ease); }
+.avatar:hover { transform: scale(1.08); }
+
+/* --- Tarjetas: entran escalonadas y se elevan con el mouse --- */
+/* (#estado-tarjetas se excluye: se vuelve a pintar cada vez que seleccionas un estado) */
+.cards:not(#estado-tarjetas) > * { animation: aparecer-arriba var(--t-lenta) var(--ease) backwards; }
+.cards > *:nth-child(2) { animation-delay: 0.06s; }
+.cards > *:nth-child(3) { animation-delay: 0.12s; }
+.cards > *:nth-child(4) { animation-delay: 0.18s; }
+.cards > *:nth-child(n+5) { animation-delay: 0.24s; }
+
+.stat-card { transition: transform var(--t-normal) var(--ease), box-shadow var(--t-normal) var(--ease); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(23, 63, 120, 0.12); }
+/* Al pasar el mouse por la tarjeta, el enlace se desliza y aparece una flecha.
+   (El movimiento va en el <span>, no en el botón: un transform en el botón rompería el área clicable) */
+.stat-link span { display: inline-block; transition: transform var(--t-rapida) var(--ease); }
+.stat-link span::after { content: " \2192"; opacity: 0; transition: opacity var(--t-rapida); }
+.stat-card:hover .stat-link span { transform: translateX(3px); }
+.stat-card:hover .stat-link span::after { opacity: 1; }
+/* Teclado: el aro de foco rodea la tarjeta completa */
+.stat-link:focus-visible { outline: none; }
+.stat-card:has(.stat-link:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+/* --- Tablas: las filas aparecen una tras otra (solo las 8 primeras) --- */
+tbody tr { animation: aparecer-arriba var(--t-normal) var(--ease) backwards; transition: background-color var(--t-rapida); }
+tbody tr:nth-child(2) { animation-delay: 0.03s; }
+tbody tr:nth-child(3) { animation-delay: 0.06s; }
+tbody tr:nth-child(4) { animation-delay: 0.09s; }
+tbody tr:nth-child(5) { animation-delay: 0.12s; }
+tbody tr:nth-child(6) { animation-delay: 0.15s; }
+tbody tr:nth-child(7) { animation-delay: 0.18s; }
+tbody tr:nth-child(n+8) { animation-delay: 0.21s; }
+
+/* --- Barras de progreso: se llenan de izquierda a derecha --- */
+.progress-bar { transform-origin: left center; animation: llenar-barra 0.9s var(--ease) 0.15s backwards; }
+
+/* --- Formularios --- */
+.form-group input, .form-group select, .form-group textarea,
+.input-group input, .filtros select, .filtros input {
+    transition: border-color var(--t-rapida), box-shadow var(--t-rapida);
+}
+.form-group.con-error input, .form-group.con-error textarea, .form-group.con-error select { animation: sacudir 0.35s; }
+.form-group.con-error .campo-error { animation: aparecer-arriba var(--t-normal) var(--ease); }
+
+.zona-archivos { transition: border-color var(--t-normal), background-color var(--t-normal); }
+.zona-archivos:hover { border-color: var(--acento); background-color: #f3f7fd; }
+
+.tabs button { transition: color var(--t-rapida), border-color var(--t-normal); }
+.tabs button:hover { color: var(--texto); }
+.tabs button.activa:hover { color: var(--acento); }
+
+/* Stepper: el paso actual "salta" al activarse y su contenido se despliega */
+.stepper .paso.actual .paso-num { animation: pop 0.35s var(--ease); }
+.paso-card.actual .paso-card-cuerpo { animation: aparecer-arriba var(--t-normal) var(--ease); }
+
+/* --- Ventanas modales: entran con zoom suave y salen con fundido --- */
+.modal-fondo { animation: aparecer var(--t-rapida) ease-out; transition: opacity 0.16s ease-in; }
+.modal-caja { animation: modal-entra var(--t-normal) var(--ease); transition: transform 0.16s ease-in; }
+.modal-fondo.cerrando { opacity: 0; pointer-events: none; }
+.modal-fondo.cerrando .modal-caja { transform: scale(0.97); }
+.modal-x { transition: color var(--t-rapida), transform var(--t-normal) var(--ease); }
+.modal-x:hover { color: var(--texto); transform: rotate(90deg); }
+
+/* --- Mensajes (toast): entran deslizando y llevan una barrita de cuenta regresiva --- */
+.toast { position: relative; overflow: hidden; animation: toast-entra 0.3s var(--ease); }
+.toast::after {
+    content: "";
+    position: absolute; left: 0; bottom: 0;
+    width: 100%; height: 3px;
+    background-color: rgba(255, 255, 255, 0.55);
+    transform-origin: left center;
+    animation: cuenta-atras 3.6s linear forwards;
 }
 
-/* Zona de evidencias (panel Estudiante): resalta al arrastrar un
-   archivo encima; cada archivo agregado entra con animación */
-.zona-archivos { transition: border-color 0.15s, background-color 0.15s; }
-.zona-archivos.arrastrando { border-color: var(--acento); background-color: #eef4fc; }
-.lista-archivos li { animation: archivo-entrada 0.25s ease; }
-@keyframes archivo-entrada {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* --- Menú móvil: el fondo oscuro aparece con fundido --- */
+body.menu-abierto::after { animation: aparecer var(--t-normal) ease-out; }
+
+/* --- Login --- */
+.login-container { animation: aparecer-arriba 0.5s var(--ease); }
+.login-error.visible { animation: sacudir 0.4s; }
+.ver-clave { transition: transform var(--t-rapida) var(--ease); }
+.ver-clave:hover { transform: translateY(-50%) scale(1.18); }
+.ver-clave:active { transform: translateY(-50%) scale(0.92); }
+
+/* --- Respeto a "reducir movimiento" del sistema operativo --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
-.lista-archivos .quitar { transition: transform 0.15s ease, color 0.15s ease; }
-.lista-archivos .quitar:hover { transform: scale(1.25) rotate(90deg); color: #7a1c15; }
 
-/* Stepper: la línea entre pasos se "llena" con transición */
-.stepper .paso-linea { transition: background-color 0.3s ease; }
-
-/* Opcional — validación en vivo del login (ver paso 4) */
-.input-group input:required:user-invalid { border-color: #b13030; background-color: #fdeaea; }
-.input-group input:required:user-valid   { border-color: #237744; }
+/* --- Ajustes en celular --- */
+@media (max-width: 640px) {
+    .footer-copy { padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+    /* En pantallas táctiles no hay "hover": evita que las tarjetas queden elevadas tras tocar */
+    .stat-card:hover { transform: none; box-shadow: none; }
+    .menu button:hover { padding-left: 24px; }
+}

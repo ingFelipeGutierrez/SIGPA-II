@@ -21,6 +21,33 @@ router.get("/estudiante/:id", async (req, res) => {
     } catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar" }); }
 });
 
+// Consultar la(s) retroalimentación(es) de una bitácora puntual
+router.get("/bitacora/:id", async (req, res) => {
+    try {
+        const db = getDb();
+        const r = await db.collection("retroalimentacion")
+            .find({ bitacora_id: new ObjectId(req.params.id) })
+            .sort({ fecha: -1 })
+            .toArray();
+        res.json(r);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar la retroalimentación de la bitácora" }); }
+});
+
+// Editar el texto de una retroalimentación ya creada
+router.put("/:id", async (req, res) => {
+    try {
+        const { texto } = req.body;
+        const db = getDb();
+        const r = await db.collection("retroalimentacion").findOneAndUpdate(
+            { _id: new ObjectId(req.params.id) },
+            { $set: { texto, fecha: new Date() } },
+            { returnDocument: "after" }
+        );
+        if (!r.value) return res.status(404).json({ error: "Retroalimentación no encontrada" });
+        res.json(r.value);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al editar la retroalimentación" }); }
+});
+
 router.delete("/:id", async (req, res) => {
     try {
         const db = getDb();

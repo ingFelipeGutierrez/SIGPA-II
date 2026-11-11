@@ -61,6 +61,36 @@ router.put("/:id/correccion", async (req, res) => {
     } catch (error) { console.error(error); res.status(500).json({ error: "Error al solicitar corrección" }); }
 });
 
+// Editar y reenviar una bitácora que quedó en "requiere_correccion"
+router.put("/:id", async (req, res) => {
+    try {
+        const db = getDb();
+        const bitacora = await db.collection("bitacora").findOne({ _id: new ObjectId(req.params.id) });
+        if (!bitacora) return res.status(404).json({ error: "Bitácora no encontrada" });
+
+        if (bitacora.estado !== "requiere_correccion") {
+            return res.status(400).json({ error: "Solo se puede editar una bitácora en estado 'requiere_correccion'" });
+        }
+
+        const { titulo, fecha, descripcion, horas_registradas } = req.body;
+        const cambios = { estado: "pendiente", motivo_correccion: null };
+        if (titulo !== undefined) cambios.titulo = titulo;
+        if (fecha !== undefined) cambios.fecha = new Date(fecha);
+        if (descripcion !== undefined) cambios.descripcion = descripcion;
+        if (horas_registradas !== undefined) cambios.horas_registradas = horas_registradas;
+
+        const r = await db.collection("bitacora").findOneAndUpdate(
+            { _id: new ObjectId(req.params.id) },
+            { $set: cambios },
+            { returnDocument: "after" }
+        );
+        res.json(r.value);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al editar la bitácora" });
+    }
+});
+
 router.delete("/:id", async (req, res) => {
     try {
         const db = getDb();

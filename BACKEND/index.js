@@ -11,6 +11,7 @@ const actividadesRouter = require("./routes/actividades");
 const bitacorasRouter = require("./routes/bitacoras");
 const retroRouter = require("./routes/retroalimentacion");
 const evidenciasRouter = require("./routes/evidencias");
+const solicitudesRouter = require("./routes/solicitudes");
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ app.use("/api/actividades", actividadesRouter);
 app.use("/api/bitacoras", bitacorasRouter);
 app.use("/api/retroalimentacion", retroRouter);
 app.use("/api/evidencias", evidenciasRouter);
+app.use("/api/solicitudes", solicitudesRouter);
 
 app.get("/api/ping/neondb", async (req, res) => {
     try {

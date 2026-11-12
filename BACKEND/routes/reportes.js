@@ -159,4 +159,80 @@ router.get("/horas", async (req, res) => {
     }
 });
 
+// Helper: valida ?fecha_inicial=YYYY-MM-DD&fecha_final=YYYY-MM-DD en la query
+function validarRangoFechas(req, res) {
+    const { fecha_inicial, fecha_final } = req.query;
+    if (!fecha_inicial || !fecha_final) {
+        res.status(400).json({ error: "Se requieren fecha_inicial y fecha_final (formato YYYY-MM-DD)" });
+        return null;
+    }
+    const inicio = new Date(fecha_inicial);
+    const fin = new Date(fecha_final);
+    if (isNaN(inicio) || isNaN(fin)) {
+        res.status(400).json({ error: "fecha_inicial o fecha_final no son fechas válidas" });
+        return null;
+    }
+    if (fin < inicio) {
+        res.status(400).json({ error: "fecha_final no puede ser anterior a fecha_inicial" });
+        return null;
+    }
+    return { inicio, fin };
+}
+
+// Reporte: Cumplimiento de horas por institución
+router.get("/horas-institucion", async (req, res) => {
+    try {
+        const rango = validarRangoFechas(req, res);
+        if (!rango) return;
+        const { inicio, fin } = rango;
+
+        const asignaciones = await practicas.query(`
+            SELECT ap.id_asignacion, i.nombre AS institucion, ap.horas_requeridas
+            FROM asignacion_plaza ap
+            JOIN plaza p ON p.id_plaza = ap.plaza_id
+            JOIN institucion_receptora i ON i.id_institucion = p.institucion_id
+            WHERE ap.fecha_inicio BETWEEN $1 AND $2
+        `, [inicio, fin]);
+
+        const db = getDb();
+        const sumas = await db.collection("bitacora").aggregate([
+            { $match: { estado: "aprobada" } },
+            { $group: { _id: "$id_asignacion", horas_cumplidas: { $sum: "$horas_registradas" } } }
+        ]).toArray();
+        const mapaHoras = {};
+        sumas.forEach(s => { mapaHoras[s._id] = s.horas_cumplidas || 0; });
+
+        const porInstitucion = {};
+        asignaciones.rows.forEach(fila => {
+            const cumplidas = mapaHoras[fila.id_asignacion] || 0;
+            const requeridas = fila.horas_requeridas || 160;
+            const porcentaje = requeridas > 0 ? Math.round((cumplidas / requeridas) * 100) : 0;
+
+            if (!porInstitucion[fila.institucion]) {
+                porInstitucion[fila.institucion] = { institucion: fila.institucion, estudiantes: 0, suma_porcentajes: 0, bajo: 0, medio: 0, alto: 0 };
+            }
+            const grupo = porInstitucion[fila.institucion];
+            grupo.estudiantes += 1;
+            grupo.suma_porcentajes += porcentaje;
+            if (porcentaje < 50) grupo.bajo += 1;
+            else if (porcentaje < 80) grupo.medio += 1;
+            else grupo.alto += 1;
+        });
+
+        const instituciones = Object.values(porInstitucion).map(g => ({
+            institucion: g.institucion,
+            estudiantes_en_practica: g.estudiantes,
+            cumplimiento_promedio: g.estudiantes ? Math.round(g.suma_porcentajes / g.estudiantes) : 0,
+            bajo: g.bajo,
+            medio: g.medio,
+            alto: g.alto
+        })).sort((a, b) => a.cumplimiento_promedio - b.cumplimiento_promedio);
+
+        res.json({ periodo: req.query, instituciones });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al generar el reporte de horas por institución" });
+    }
+});
+
 module.exports = router;

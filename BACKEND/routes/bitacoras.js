@@ -84,7 +84,7 @@ router.put("/:id", async (req, res) => {
             { $set: cambios },
             { returnDocument: "after" }
         );
-        res.json(r.value);
+        res.json(r);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error al editar la bitácora" });

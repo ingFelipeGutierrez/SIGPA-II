@@ -43,8 +43,8 @@ router.put("/:id", async (req, res) => {
             { $set: { texto, fecha: new Date() } },
             { returnDocument: "after" }
         );
-        if (!r.value) return res.status(404).json({ error: "Retroalimentación no encontrada" });
-        res.json(r.value);
+        if (!r) return res.status(404).json({ error: "Retroalimentación no encontrada" });
+        res.json(r);
     } catch (error) { console.error(error); res.status(500).json({ error: "Error al editar la retroalimentación" }); }
 });
 

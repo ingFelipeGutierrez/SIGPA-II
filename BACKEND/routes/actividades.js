@@ -76,7 +76,7 @@ router.put("/:id", async (req, res) => {
             { $set: cambios },
             { returnDocument: "after" }
         );
-        if (!resultado.value) return res.status(404).json({ error: "Actividad no encontrada" });
+        if (!resultado) return res.status(404).json({ error: "Actividad no encontrada" });
         res.json(resultado.value);
     } catch (error) {
         console.error(error);

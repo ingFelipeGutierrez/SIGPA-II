@@ -235,4 +235,158 @@ router.get("/horas-institucion", async (req, res) => {
     }
 });
 
+// Reporte: Bitácoras por docente asesor
+router.get("/bitacoras-docente", async (req, res) => {
+    try {
+        const rango = validarRangoFechas(req, res);
+        if (!rango) return;
+        const { inicio, fin } = rango;
+
+        const asigDocentes = await practicas.query(`
+            SELECT id_estudiante, id_docente FROM asignacion_docente WHERE estado = 'ACTIVO'
+        `);
+        const idsDocentes = [...new Set(asigDocentes.rows.map(r => r.id_docente))];
+
+        const nombresDocentes = idsDocentes.length
+            ? await neondb.query(`SELECT id_usuario, nombre, apellido FROM usuario WHERE id_usuario = ANY($1)`, [idsDocentes])
+            : { rows: [] };
+        const mapaNombres = {};
+        nombresDocentes.rows.forEach(u => { mapaNombres[u.id_usuario] = `${u.nombre} ${u.apellido}`; });
+
+        // id_asignacion vigente de cada estudiante (la más reciente)
+        const planes = await practicas.query(`
+            SELECT DISTINCT ON (id_estudiante) id_estudiante, id_asignacion
+            FROM asignacion_plaza
+            ORDER BY id_estudiante, id_asignacion DESC
+        `);
+        const mapaAsignacionPorEstudiante = {};
+        planes.rows.forEach(p => { mapaAsignacionPorEstudiante[p.id_estudiante] = p.id_asignacion; });
+
+        // Qué id_asignacion le corresponde a cada docente
+        const asignacionesPorDocente = {};
+        asigDocentes.rows.forEach(a => {
+            const idAsignacion = mapaAsignacionPorEstudiante[a.id_estudiante];
+            if (!idAsignacion) return;
+            if (!asignacionesPorDocente[a.id_docente]) asignacionesPorDocente[a.id_docente] = [];
+            asignacionesPorDocente[a.id_docente].push(idAsignacion);
+        });
+
+        const db = getDb();
+        const docentes = [];
+        for (const idDocente of idsDocentes) {
+            const idsAsignacion = asignacionesPorDocente[idDocente] || [];
+            const bits = idsAsignacion.length
+                ? await db.collection("bitacora").find({
+                      id_asignacion: { $in: idsAsignacion },
+                      fecha: { $gte: inicio, $lte: fin }
+                  }).toArray()
+                : [];
+
+            docentes.push({
+                docente_asesor: mapaNombres[idDocente] || "Desconocido",
+                total_bitacoras: bits.length,
+                pendientes: bits.filter(b => b.estado === "pendiente").length,
+                aprobadas: bits.filter(b => b.estado === "aprobada").length,
+                requieren_correccion: bits.filter(b => b.estado === "requiere_correccion").length
+            });
+        }
+
+        docentes.sort((a, b) => b.total_bitacoras - a.total_bitacoras);
+
+        res.json({ periodo: req.query, docentes });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al generar el reporte de bitácoras por docente asesor" });
+    }
+});
+
+// Reporte: Desempeño y resultado de las prácticas
+router.get("/desempeno", async (req, res) => {
+    try {
+        const rango = validarRangoFechas(req, res);
+        if (!rango) return;
+        const { inicio, fin } = rango;
+
+        const asignaciones = await practicas.query(`
+            SELECT ap.id_asignacion, ap.id_estudiante, ap.horas_requeridas, i.nombre AS institucion
+            FROM asignacion_plaza ap
+            JOIN plaza p ON p.id_plaza = ap.plaza_id
+            JOIN institucion_receptora i ON i.id_institucion = p.institucion_id
+            WHERE ap.fecha_inicio BETWEEN $1 AND $2
+        `, [inicio, fin]);
+
+        const idsAsignacion = asignaciones.rows.map(a => a.id_asignacion);
+        const idsEstudiantes = asignaciones.rows.map(a => a.id_estudiante);
+
+        const usuarios = idsEstudiantes.length
+            ? await neondb.query(`SELECT id_usuario, nombre, apellido FROM usuario WHERE id_usuario = ANY($1)`, [idsEstudiantes])
+            : { rows: [] };
+        const mapaNombres = {};
+        usuarios.rows.forEach(u => { mapaNombres[u.id_usuario] = `${u.nombre} ${u.apellido}`; });
+
+        const evaluaciones = idsAsignacion.length
+            ? await practicas.query(`SELECT id_asignacion, nota FROM calificacion_evaluacion WHERE id_asignacion = ANY($1)`, [idsAsignacion])
+            : { rows: [] };
+        const mapaNotaFinal = {};
+        evaluaciones.rows.forEach(e => { mapaNotaFinal[e.id_asignacion] = parseFloat(e.nota); });
+
+        const notasBitacora = idsAsignacion.length
+            ? await practicas.query(`SELECT id_asignacion, nota FROM calificacion_bitacora WHERE id_asignacion = ANY($1)`, [idsAsignacion])
+            : { rows: [] };
+        const sumasBitacora = {};
+        notasBitacora.rows.forEach(n => {
+            if (!sumasBitacora[n.id_asignacion]) sumasBitacora[n.id_asignacion] = { suma: 0, cuenta: 0 };
+            sumasBitacora[n.id_asignacion].suma += parseFloat(n.nota);
+            sumasBitacora[n.id_asignacion].cuenta += 1;
+        });
+        const promediosBitacora = {};
+        Object.keys(sumasBitacora).forEach(id => {
+            promediosBitacora[id] = Math.round((sumasBitacora[id].suma / sumasBitacora[id].cuenta) * 10) / 10;
+        });
+
+        const db = getDb();
+        const sumasHoras = idsAsignacion.length
+            ? await db.collection("bitacora").aggregate([
+                  { $match: { estado: "aprobada", id_asignacion: { $in: idsAsignacion } } },
+                  { $group: { _id: "$id_asignacion", horas_cumplidas: { $sum: "$horas_registradas" } } }
+              ]).toArray()
+            : [];
+        const mapaHoras = {};
+        sumasHoras.forEach(s => { mapaHoras[s._id] = s.horas_cumplidas || 0; });
+
+        const estudiantes = asignaciones.rows.map(fila => {
+            const cumplidas = mapaHoras[fila.id_asignacion] || 0;
+            const requeridas = fila.horas_requeridas || 160;
+            const porcentajeHoras = requeridas > 0 ? Math.round((cumplidas / requeridas) * 100) : 0;
+            const notaFinal = mapaNotaFinal[fila.id_asignacion] ?? null;
+
+            let resultado;
+            if (notaFinal === null) resultado = "Sin calificar";
+            else resultado = notaFinal >= 3.0 ? "Aprobado" : "No aprobado";
+
+            return {
+                id_asignacion: fila.id_asignacion,
+                estudiante: mapaNombres[fila.id_estudiante] || "Desconocido",
+                institucion: fila.institucion,
+                porcentaje_horas: porcentajeHoras,
+                promedio_bitacoras: promediosBitacora[fila.id_asignacion] ?? null,
+                nota_final: notaFinal,
+                resultado
+            };
+        });
+
+        const indicadores = {
+            total_estudiantes: estudiantes.length,
+            aprobados: estudiantes.filter(e => e.resultado === "Aprobado").length,
+            no_aprobados: estudiantes.filter(e => e.resultado === "No aprobado").length,
+            sin_calificar: estudiantes.filter(e => e.resultado === "Sin calificar").length
+        };
+
+        res.json({ periodo: req.query, indicadores, estudiantes });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al generar el reporte de desempeño y resultado de las prácticas" });
+    }
+});
+
 module.exports = router;

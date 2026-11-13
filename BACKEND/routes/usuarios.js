@@ -229,4 +229,162 @@ router.delete("/estudiantes-completos/:id", async (req, res) => {
     }
 });
 
+// ===== DIRECTOR =====
+
+router.get("/directores-completos", async (req, res) => {
+    try {
+        const resultado = await neondb.query(`
+            SELECT u.id_usuario, u.nombre, u.apellido, u.email
+            FROM usuario u JOIN director d ON u.id_usuario = d.id_usuario
+            ORDER BY u.id_usuario
+        `);
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar los directores" });
+    }
+});
+
+router.post("/directores-completos", async (req, res) => {
+    const cliente = await neondb.connect();
+    try {
+        const { nombre, apellido, email } = req.body;
+        const googleSub = "prueba-" + Date.now();
+
+        await cliente.query("BEGIN");
+        const u = await cliente.query(
+            `INSERT INTO usuario (nombre, apellido, email, google_sub, rol)
+             VALUES ($1, $2, $3, $4, 'DIRECTOR') RETURNING *`,
+            [nombre, apellido, email, googleSub]
+        );
+        const d = await cliente.query(
+            `INSERT INTO director (id_usuario) VALUES ($1) RETURNING *`,
+            [u.rows[0].id_usuario]
+        );
+        await cliente.query("COMMIT");
+        res.status(201).json({ usuario: u.rows[0], director: d.rows[0] });
+    } catch (error) {
+        await cliente.query("ROLLBACK");
+        console.error(error);
+        res.status(500).json({ error: "Error al crear el director" });
+    } finally {
+        cliente.release();
+    }
+});
+
+router.put("/directores-completos/:id", async (req, res) => {
+    try {
+        const { nombre, apellido, email } = req.body;
+        const u = await neondb.query(
+            `UPDATE usuario SET nombre=$1, apellido=$2, email=$3 WHERE id_usuario=$4 RETURNING *`,
+            [nombre, apellido, email, req.params.id]
+        );
+        if (u.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json(u.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar el director" });
+    }
+});
+
+router.delete("/directores-completos/:id", async (req, res) => {
+    const cliente = await neondb.connect();
+    try {
+        await cliente.query("BEGIN");
+        await cliente.query("DELETE FROM director WHERE id_usuario = $1", [req.params.id]);
+        const resultado = await cliente.query(
+            "DELETE FROM usuario WHERE id_usuario = $1 RETURNING *",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) { await cliente.query("ROLLBACK"); return res.status(404).json({ error: "No encontrado" }); }
+        await cliente.query("COMMIT");
+        res.json({ mensaje: "Director eliminado" });
+    } catch (error) {
+        await cliente.query("ROLLBACK");
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar el director" });
+    } finally {
+        cliente.release();
+    }
+});
+
+// ===== ADMIN SISTEMA =====
+
+router.get("/admins-completos", async (req, res) => {
+    try {
+        const resultado = await neondb.query(`
+            SELECT u.id_usuario, u.nombre, u.apellido, u.email
+            FROM usuario u JOIN admin_sistema a ON u.id_usuario = a.id_usuario
+            ORDER BY u.id_usuario
+        `);
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar los administradores" });
+    }
+});
+
+router.post("/admins-completos", async (req, res) => {
+    const cliente = await neondb.connect();
+    try {
+        const { nombre, apellido, email } = req.body;
+        const googleSub = "prueba-" + Date.now();
+
+        await cliente.query("BEGIN");
+        const u = await cliente.query(
+            `INSERT INTO usuario (nombre, apellido, email, google_sub, rol)
+             VALUES ($1, $2, $3, $4, 'ADMIN_SISTEMA') RETURNING *`,
+            [nombre, apellido, email, googleSub]
+        );
+        const a = await cliente.query(
+            `INSERT INTO admin_sistema (id_usuario) VALUES ($1) RETURNING *`,
+            [u.rows[0].id_usuario]
+        );
+        await cliente.query("COMMIT");
+        res.status(201).json({ usuario: u.rows[0], admin: a.rows[0] });
+    } catch (error) {
+        await cliente.query("ROLLBACK");
+        console.error(error);
+        res.status(500).json({ error: "Error al crear el administrador" });
+    } finally {
+        cliente.release();
+    }
+});
+
+router.put("/admins-completos/:id", async (req, res) => {
+    try {
+        const { nombre, apellido, email } = req.body;
+        const u = await neondb.query(
+            `UPDATE usuario SET nombre=$1, apellido=$2, email=$3 WHERE id_usuario=$4 RETURNING *`,
+            [nombre, apellido, email, req.params.id]
+        );
+        if (u.rows.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json(u.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar el administrador" });
+    }
+});
+
+router.delete("/admins-completos/:id", async (req, res) => {
+    const cliente = await neondb.connect();
+    try {
+        await cliente.query("BEGIN");
+        await cliente.query("DELETE FROM admin_sistema WHERE id_usuario = $1", [req.params.id]);
+        const resultado = await cliente.query(
+            "DELETE FROM usuario WHERE id_usuario = $1 RETURNING *",
+            [req.params.id]
+        );
+        if (resultado.rows.length === 0) { await cliente.query("ROLLBACK"); return res.status(404).json({ error: "No encontrado" }); }
+        await cliente.query("COMMIT");
+        res.json({ mensaje: "Administrador eliminado" });
+    } catch (error) {
+        await cliente.query("ROLLBACK");
+        console.error(error);
+        res.status(500).json({ error: "Error al eliminar el administrador" });
+    } finally {
+        cliente.release();
+    }
+});
+
 module.exports = router;

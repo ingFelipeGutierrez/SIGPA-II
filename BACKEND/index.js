@@ -65,10 +65,6 @@ app.get("/api/ping/mongo", async (req, res) => {
     }
 });
 
-app.get("/api/ping/mongo", async (req, res) => {
-    // ... (tu código actual, no lo toques)
-});
-
 // 1) RUTA RAÍZ: va aquí, después de los ping y antes de PORT
 app.get("/", (req, res) => {
     res.json({ servicio: "SIGPA-II API", estado: "activo" });

@@ -13,6 +13,7 @@ const retroRouter = require("./routes/retroalimentacion");
 const evidenciasRouter = require("./routes/evidencias");
 const solicitudesRouter = require("./routes/solicitudes");
 const reportesRouter = require("./routes/reportes");
+const loginRoutes = require("./routes/login");
 
 const app = express();
 app.use(cors());
@@ -36,6 +37,7 @@ app.use("/api/retroalimentacion", retroRouter);
 app.use("/api/evidencias", evidenciasRouter);
 app.use("/api/solicitudes", solicitudesRouter);
 app.use("/api/reportes", reportesRouter);
+app.use("/api/login", loginRoutes);
 
 app.get("/api/ping/neondb", async (req, res) => {
     try {

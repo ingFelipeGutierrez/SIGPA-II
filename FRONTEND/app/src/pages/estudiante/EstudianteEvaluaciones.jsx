@@ -3,7 +3,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ToastContext";
 import { obtenerMiPractica, obtenerCalificacionesPorAsignacion } from "../../services/practicas";
 import { obtenerBitacorasEstudiante } from "../../services/bitacoras";
-import { obtenerActividadesDeGrupo } from "../../services/actividades";
 import { obtenerRetroalimentacionEstudiante } from "../../services/retroalimentacion";
 import { formatearFecha, formatearNota } from "../../utils/formato";
 import Modal from "../../components/Modal";
@@ -36,16 +35,15 @@ export default function EstudianteEvaluaciones() {
       ]);
       setRetros(retroList);
 
+      // Cada bitácora ya trae su propio título (campo obligatorio en el
+      // esquema de MongoDB), así que basta con mapear por su _id.
+      const mapa = {};
+      bits.forEach((b) => { mapa[b._id] = b.titulo || "Bitácora"; });
+      setTituloPorBitacora(mapa);
+
       if (pr?.id_asignacion) {
         const notasList = await obtenerCalificacionesPorAsignacion(pr.id_asignacion);
         setNotas(notasList);
-      }
-      if (pr?.id_grupo) {
-        const actividades = await obtenerActividadesDeGrupo(pr.id_grupo);
-        const actividadTitulo = Object.fromEntries(actividades.map((a) => [a._id, a.titulo]));
-        const mapa = {};
-        bits.forEach((b) => { mapa[b._id] = actividadTitulo[b.actividad_id] || "Bitácora"; });
-        setTituloPorBitacora(mapa);
       }
       setCargando(false);
     })();

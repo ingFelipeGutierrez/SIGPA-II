@@ -85,7 +85,7 @@ export default function EstudianteBitacoras() {
             {bits.map((b) => (
               <tr key={b._id}>
                 <td data-label="Fecha">{formatearFecha(b.fecha)}</td>
-                <td data-label="Título">{actividades[b.actividad_id] || "—"}</td>
+                <td data-label="Título">{b.titulo}</td>
                 <td data-label="Descripción">{b.descripcion}</td>
                 <td data-label="Horas">{formatearHoras(b.horas_registradas)}</td>
                 <td data-label="Evidencias">{conteoEvidencias[b._id] ? `📎 ${conteoEvidencias[b._id]}` : "—"}</td>
@@ -113,7 +113,8 @@ export default function EstudianteBitacoras() {
       </div>
 
       {modalBitacora && (
-        <Modal titulo={actividades[modalBitacora.actividad_id] || "Bitácora"} onClose={() => setModalBitacora(null)}>
+        <Modal titulo={modalBitacora.titulo} onClose={() => setModalBitacora(null)}>
+          <p className="dato-linea"><strong>Actividad:</strong> {actividades[modalBitacora.actividad_id] || "—"}</p>
           <p className="dato-linea"><strong>Fecha:</strong> {formatearFecha(modalBitacora.fecha)}</p>
           <p className="dato-linea"><strong>Horas dedicadas:</strong> {formatearHoras(modalBitacora.horas_registradas)}</p>
           <p className="dato-linea"><strong>Estado:</strong> <Badge estado={textoEstadoBitacora(modalBitacora.estado)} /></p>

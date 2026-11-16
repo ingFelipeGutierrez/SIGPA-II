@@ -84,6 +84,8 @@ const COLORES_ESTADO = {
   requiere_correccion: "naranja",
   Finalizada: "gris",
   finalizada: "gris",
+  Cambiada: "gris",
+  cambiada: "gris",
 };
 
 /** Clase CSS del badge (sin el texto) para un estado dado. */
@@ -101,4 +103,27 @@ export function textoEstadoBitacora(estado) {
     requiere_correccion: "Requiere corrección",
   };
   return mapa[estado] || estado;
+}
+
+/** Igual que `textoEstadoBitacora`, pero para el estado de una
+ *  asignacion_plaza (la práctica del estudiante): "en_curso" -> "En
+ *  curso", etc. Usado en el panel de Docente/Director. */
+export function textoEstadoPractica(estado) {
+  const mapa = {
+    pendiente: "Pendiente",
+    en_curso: "En curso",
+    finalizada: "Finalizada",
+    aprobada: "Aprobada",
+    rechazada: "Rechazada",
+    cambiada: "Cambiada",
+  };
+  return mapa[estado] || estado || "Sin asignar";
+}
+
+/** Cuenta palabras de un texto (separadas por espacios), para los
+ *  contadores en vivo de retroalimentación ("0 / 200 palabras"), igual
+ *  que `contarPalabras` del prototipo original. */
+export function contarPalabras(texto) {
+  const limpio = String(texto || "").trim();
+  return limpio ? limpio.split(/\s+/).length : 0;
 }

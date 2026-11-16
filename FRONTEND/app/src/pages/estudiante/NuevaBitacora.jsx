@@ -19,7 +19,10 @@ const PASOS = ["Actividad", "Descripción", "Evidencias", "Revisión"];
  * escribir un título libre, el estudiante elige la ACTIVIDAD (tarea tipo
  * Classroom) que su docente publicó para el grupo, porque así quedó
  * definido el modelo de datos real (bitacora.actividad_id es obligatorio
- * en el backend). Las evidencias, por ahora, son un enlace (ej. de
+ * en el backend). El titulo SI se conserva como campo propio de la
+ * bitacora (independiente del titulo de la actividad): el esquema de
+ * validacion de la coleccion "bitacora" en MongoDB lo exige obligatorio.
+ * Las evidencias, por ahora, son un enlace (ej. de
  * Google Drive) y no un archivo subido directamente, porque el backend
  * v1 solo admite evidencias de tipo "link_drive".
  */
@@ -40,6 +43,7 @@ export default function NuevaBitacora() {
   const [errores, setErrores] = useState({});
 
   const [actividadId, setActividadId] = useState("");
+  const [titulo, setTitulo] = useState("");
   const [fecha, setFecha] = useState("");
   const [horas, setHoras] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -62,6 +66,7 @@ export default function NuevaBitacora() {
         if (!b) { mostrarToast("No se encontró la bitácora a corregir.", "error"); navigate("/estudiante/bitacoras"); return; }
         setBitacoraOriginal(b);
         setActividadId(b.actividad_id);
+        setTitulo(b.titulo || "");
         setFecha(String(b.fecha).split("T")[0]);
         setHoras(b.horas_registradas);
         setDescripcion(b.descripcion);
@@ -89,7 +94,13 @@ export default function NuevaBitacora() {
       const h = marcarError("horas", errHoras);
       return a && f && h;
     }
-    if (n === 2) return marcarError("descripcion", descripcion.trim() ? "" : "Describe la actividad realizada.");
+    if (n === 2) {
+      const errTitulo = !titulo.trim() ? "Escribe un título para esta bitácora."
+        : titulo.trim().length > 150 ? "El título no puede superar los 150 caracteres." : "";
+      const t = marcarError("titulo", errTitulo);
+      const d = marcarError("descripcion", descripcion.trim() ? "" : "Describe la actividad realizada.");
+      return t && d;
+    }
     return true;
   }
 
@@ -127,7 +138,7 @@ export default function NuevaBitacora() {
     }
     setGuardando(true);
     try {
-      const datosBitacora = { fecha, descripcion: descripcion.trim(), horas_registradas: Number(horas) };
+      const datosBitacora = { titulo: titulo.trim(), fecha, descripcion: descripcion.trim(), horas_registradas: Number(horas) };
 
       if (modoCorreccion) {
         await corregirBitacora(idBitacora, datosBitacora);
@@ -213,9 +224,15 @@ export default function NuevaBitacora() {
         <div className="paso-acciones"><span /><button className="button-primary" onClick={() => siguientePaso(1)}>Siguiente</button></div>
       </PasoCard>
 
-      <PasoCard n={2} titulo="Descripción de la actividad" pasoActual={pasoActual} pasoMaximo={pasoMaximo}
-        resumen={pasoActual > 2 ? (descripcion.length > 90 ? descripcion.slice(0, 90) + "…" : descripcion) : ""}
+      <PasoCard n={2} titulo="Título y descripción" pasoActual={pasoActual} pasoMaximo={pasoMaximo}
+        resumen={pasoActual > 2 ? titulo : ""}
         onEditar={() => irAPaso(2)}>
+        <div className={`form-group ${errores.titulo ? "con-error" : ""}`}>
+          <label>Título de la bitácora</label>
+          <input type="text" maxLength={150} placeholder="Ej: Día 1 - Reconocimiento del área de trabajo"
+            value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          <div className="campo-error">{errores.titulo}</div>
+        </div>
         <div className={`form-group ${errores.descripcion ? "con-error" : ""}`}>
           <label>Descripción de la actividad</label>
           <textarea placeholder="Describe detalladamente la actividad realizada..." value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
@@ -250,6 +267,7 @@ export default function NuevaBitacora() {
 
       <PasoCard n={4} titulo="Revisión" pasoActual={pasoActual} pasoMaximo={pasoMaximo} resumen="" onEditar={null}>
         <p className="dato-linea"><strong>Actividad:</strong> {actividadSeleccionada?.titulo || "—"}</p>
+        <p className="dato-linea"><strong>Título de la bitácora:</strong> {titulo || "—"}</p>
         <p className="dato-linea"><strong>Fecha:</strong> {fecha ? formatearFecha(fecha) : "—"}</p>
         <p className="dato-linea"><strong>Horas dedicadas:</strong> {horas ? formatearHoras(Number(horas)) : "—"}</p>
         <p className="dato-linea"><strong>Descripción:</strong><br />{descripcion || "—"}</p>

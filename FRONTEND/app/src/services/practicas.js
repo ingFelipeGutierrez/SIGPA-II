@@ -31,6 +31,14 @@ export const obtenerNivelesPractica = () => apiGet(`${BASE}/niveles`);
 /** Institución receptora por id, para el modal "ver más detalles". */
 export const obtenerInstituciones = () => apiGet(`${BASE}/instituciones`);
 
+/**
+ * Vista agregada para el panel del Docente (CU "Consultar estudiantes
+ * asignados y avances de horas"): un registro por cada estudiante a
+ * cargo del docente, con su plaza/institución más reciente ya resueltas.
+ */
+export const obtenerEstudiantesDocente = (idDocente) =>
+  apiGet(`${BASE}/estudiantes-docente/${idDocente}`);
+
 // --- Las siguientes se usarán desde los paneles de Docente/Director/Admin ---
 export const obtenerConvenios = () => apiGet(`${BASE}/convenios`);
 export const obtenerGrupos = () => apiGet(`${BASE}/grupos`);
@@ -39,5 +47,13 @@ export const obtenerAsignacionesDocente = () => apiGet(`${BASE}/asignacion-docen
 export const obtenerAsignacionesPlaza = () => apiGet(`${BASE}/asignacion-plaza`);
 export const actualizarAsignacionPlaza = (id, datos) =>
   apiEnviar(`${BASE}/asignacion-plaza/${id}`, "PUT", datos);
+
+/** Crea la nota de una bitácora (solo la primera vez: la tabla tiene una
+ *  nota única por bitácora). Para modificarla ya existente, usar
+ *  `actualizarCalificacionBitacora`. */
 export const crearCalificacionBitacora = (datos) =>
   apiEnviar(`${BASE}/calificacion-bitacora`, "POST", datos);
+
+/** Modifica la nota/observaciones de una calificación ya registrada. */
+export const actualizarCalificacionBitacora = (id, datos) =>
+  apiEnviar(`${BASE}/calificacion-bitacora/${id}`, "PUT", datos);

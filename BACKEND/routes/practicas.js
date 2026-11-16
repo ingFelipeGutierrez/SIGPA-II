@@ -868,4 +868,56 @@ router.get("/mi-practica/:idEstudiante", async (req, res) => {
     }
 });
 
+/**
+ * GET /api/practicas/estudiantes-docente/:idDocente
+ *
+ * Vista agregada para el panel del Docente (caso de uso "Consultar
+ * estudiantes asignados y avances de horas"): para cada estudiante con
+ * una asignación ACTIVA a este docente, trae su asignación de plaza MÁS
+ * RECIENTE (institución, grupo, horas requeridas, estado) y su nombre.
+ * El nombre vive en neondb (otra base de Postgres distinta a
+ * ms_practicas), así que se resuelve en JavaScript, nunca con un JOIN de
+ * SQL entre las dos bases.
+ *
+ * Se arma con LEFT JOIN LATERAL (no con un INNER JOIN simple) para que un
+ * estudiante asignado al docente pero que todavía NO tiene plaza también
+ * aparezca en la lista, con la institución en null — igual que el
+ * prototipo original, que mostraba "Sin asignar" en ese caso.
+ */
+router.get("/estudiantes-docente/:idDocente", async (req, res) => {
+    try {
+        const asigs = await practicas.query(
+            "SELECT id_estudiante FROM asignacion_docente WHERE id_docente = $1 AND estado = 'ACTIVO'",
+            [req.params.idDocente]
+        );
+        const idsEstudiantes = asigs.rows.map((r) => r.id_estudiante);
+        if (idsEstudiantes.length === 0) return res.json([]);
+
+        const planes = await practicas.query(`
+            SELECT e.id_estudiante, ap.id_asignacion, ap.id_grupo, ap.plaza_id,
+                   ap.horas_requeridas, ap.estado, i.nombre AS institucion
+            FROM unnest($1::int[]) AS e(id_estudiante)
+            LEFT JOIN LATERAL (
+                SELECT * FROM asignacion_plaza
+                WHERE id_estudiante = e.id_estudiante
+                ORDER BY id_asignacion DESC LIMIT 1
+            ) ap ON true
+            LEFT JOIN plaza p ON ap.plaza_id = p.id_plaza
+            LEFT JOIN institucion_receptora i ON p.institucion_id = i.id_institucion
+        `, [idsEstudiantes]);
+
+        const nombres = await neondb.query(
+            "SELECT id_usuario, nombre, apellido FROM usuario WHERE id_usuario = ANY($1::int[])",
+            [idsEstudiantes]
+        );
+        const nombrePorId = Object.fromEntries(nombres.rows.map((u) => [u.id_usuario, `${u.nombre} ${u.apellido}`]));
+
+        const resultado = planes.rows.map((p) => ({ ...p, estudiante: nombrePorId[p.id_estudiante] || "Estudiante" }));
+        res.json(resultado);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar los estudiantes del docente" });
+    }
+});
+
 module.exports = router;

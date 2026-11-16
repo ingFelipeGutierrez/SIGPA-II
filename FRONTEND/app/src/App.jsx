@@ -6,6 +6,9 @@ import EstudiantePractica from "./pages/estudiante/EstudiantePractica";
 import EstudianteBitacoras from "./pages/estudiante/EstudianteBitacoras";
 import NuevaBitacora from "./pages/estudiante/NuevaBitacora";
 import EstudianteEvaluaciones from "./pages/estudiante/EstudianteEvaluaciones";
+import DocenteInicio from "./pages/docente/DocenteInicio";
+import DocenteEstudiantes from "./pages/docente/DocenteEstudiantes";
+import DocenteBitacoras from "./pages/docente/DocenteBitacoras";
 import { useAuth } from "./context/AuthContext";
 
 /**
@@ -30,8 +33,13 @@ export default function App() {
         <Route path="evaluaciones" element={<EstudianteEvaluaciones />} />
       </Route>
 
-      {/* Paneles de Docente, Director y Admin: pendientes de construir. */}
-      <Route path="/docente/*" element={<PanelProvisional titulo="Panel Docente" />} />
+      <Route path="/docente" element={<RutaPrivada rol="DOCENTE"><PanelDocente /></RutaPrivada>}>
+        <Route index element={<DocenteInicio />} />
+        <Route path="estudiantes" element={<DocenteEstudiantes />} />
+        <Route path="bitacoras" element={<DocenteBitacoras />} />
+      </Route>
+
+      {/* Paneles de Director y Admin: pendientes de construir. */}
       <Route path="/director/*" element={<PanelProvisional titulo="Panel Director" />} />
       <Route path="/admin/*" element={<PanelProvisional titulo="Panel Super Admin" />} />
     </Routes>
@@ -50,6 +58,22 @@ function PanelEstudiante() {
         { icono: "📋", etiqueta: "Mi práctica", ruta: "practica" },
         { icono: "📝", etiqueta: "Bitácoras", ruta: "bitacoras" },
         { icono: "⭐", etiqueta: "Evaluaciones", ruta: "evaluaciones" },
+      ]}
+    />
+  );
+}
+
+/** Menú lateral del panel de Docente (CU 1, 2, 3 y 4). */
+function PanelDocente() {
+  return (
+    <PanelLayout
+      titulo="Panel del Docente"
+      rolClase="rol-docente"
+      rolEtiqueta="Docente Asesor"
+      menu={[
+        { icono: "🏠", etiqueta: "Inicio", ruta: "" },
+        { icono: "👥", etiqueta: "Mis estudiantes", ruta: "estudiantes" },
+        { icono: "📝", etiqueta: "Bitácoras por revisar", ruta: "bitacoras" },
       ]}
     />
   );

@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const practicas = require("../db/practicas");
+// usuario/director viven en neondb, una base de Postgres distinta a
+// ms_practicas: nunca se cruzan con un JOIN de SQL, el cruce se hace en
+// JavaScript (ver mi-practica y calificacion-bitacora/asignacion abajo).
+const neondb = require("../db/neondb");
 
 // Traer convenios
 router.get("/convenios", async (req, res) => {
@@ -756,6 +760,105 @@ router.delete("/calificacion-bitacora/:id", async (req, res) => {
         if (!r.rows.length) return res.status(404).json({ error: "No encontrada" });
         res.json({ mensaje: "Calificación eliminada" });
     } catch (error) { console.error(error); res.status(500).json({ error: "Error al eliminar" }); }
+});
+
+/**
+ * GET /api/practicas/calificacion-bitacora/asignacion/:idAsignacion
+ *
+ * Notas y observaciones que el docente asesor registró sobre las
+ * bitácoras de UNA asignación de plaza puntual (caso de uso "Consultar
+ * retroalimentación y observaciones del docente", bloque de notas, panel
+ * Estudiante). calificacion_bitacora ya guarda id_asignacion, así que no
+ * hace falta resolver nada en Mongo aquí: solo se agrega el nombre del
+ * docente evaluador, que vive en neondb (otra base), cruzándolo en
+ * JavaScript en vez de un JOIN de SQL.
+ */
+router.get("/calificacion-bitacora/asignacion/:idAsignacion", async (req, res) => {
+    try {
+        const r = await practicas.query(
+            "SELECT * FROM calificacion_bitacora WHERE id_asignacion = $1 ORDER BY id_calificacion DESC",
+            [req.params.idAsignacion]
+        );
+        const conDocente = await Promise.all(r.rows.map(async (fila) => {
+            const u = await neondb.query("SELECT nombre, apellido FROM usuario WHERE id_usuario = $1", [fila.docente_id]);
+            const nombreDocente = u.rows.length ? `${u.rows[0].nombre} ${u.rows[0].apellido}` : "Docente";
+            return { ...fila, docente_nombre: nombreDocente };
+        }));
+        res.json(conDocente);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las calificaciones de la asignación" });
+    }
+});
+
+/**
+ * GET /api/practicas/mi-practica/:idEstudiante
+ *
+ * Vista agregada para el panel del Estudiante (caso de uso "Consultar
+ * plaza asignada y estado de aprobación"): cruza, en un solo llamado, la
+ * asignación de plaza más reciente del estudiante con la plaza, la
+ * institución receptora, el grupo de práctica (tipo y nivel), el docente
+ * asesor asignado y el director del programa.
+ *
+ * Nota: no hay una relación en el modelo de datos entre un grupo/plaza y
+ * un director específico (el sistema maneja un único Director de
+ * Programa), así que se toma el primer registro de la tabla `director`.
+ * Si en el futuro hay más de un director por programa, este endpoint
+ * deberá recibir ese dato de otra parte.
+ *
+ * Responde con el cuerpo `null` (200 OK) si el estudiante todavía no
+ * tiene ninguna asignación de plaza registrada.
+ */
+router.get("/mi-practica/:idEstudiante", async (req, res) => {
+    try {
+        const idEstudiante = req.params.idEstudiante;
+
+        const asignacion = await practicas.query(`
+            SELECT ap.id_asignacion, ap.id_grupo, ap.plaza_id, ap.fecha_inicio, ap.fecha_fin,
+                   ap.horas_requeridas, ap.estado, ap.motivo_rechazo,
+                   p.jornada, p.institucion_id,
+                   i.nombre AS institucion, i.direccion, i.contacto, i.tipo AS institucion_tipo,
+                   g.nombre AS grupo_nombre, g.tipo_practica_id, g.nivel_practica_id,
+                   t.nombre AS tipo_practica, t.descripcion AS tipo_descripcion,
+                   n.nombre AS nivel_practica, n.numero AS nivel_numero
+            FROM asignacion_plaza ap
+            JOIN plaza p ON ap.plaza_id = p.id_plaza
+            JOIN institucion_receptora i ON p.institucion_id = i.id_institucion
+            JOIN grupo_practica g ON ap.id_grupo = g.id_grupo
+            JOIN tipo_practica t ON g.tipo_practica_id = t.id_tipo_practica
+            JOIN nivel_practica n ON g.nivel_practica_id = n.id_nivel_practica
+            WHERE ap.id_estudiante = $1
+            ORDER BY ap.id_asignacion DESC
+            LIMIT 1
+        `, [idEstudiante]);
+
+        if (asignacion.rows.length === 0) return res.json(null);
+        const plaza = asignacion.rows[0];
+
+        const docenteAsig = await practicas.query(`
+            SELECT id_docente FROM asignacion_docente
+            WHERE id_estudiante = $1 AND estado = 'ACTIVO'
+            ORDER BY id_asignacion_docente DESC LIMIT 1
+        `, [idEstudiante]);
+
+        let docenteNombre = null;
+        if (docenteAsig.rows.length) {
+            const u = await neondb.query("SELECT nombre, apellido FROM usuario WHERE id_usuario = $1", [docenteAsig.rows[0].id_docente]);
+            if (u.rows.length) docenteNombre = `${u.rows[0].nombre} ${u.rows[0].apellido}`;
+        }
+
+        const directorFila = await neondb.query(`
+            SELECT u.nombre, u.apellido FROM usuario u
+            JOIN director d ON u.id_usuario = d.id_usuario
+            ORDER BY u.id_usuario LIMIT 1
+        `);
+        const directorNombre = directorFila.rows.length ? `${directorFila.rows[0].nombre} ${directorFila.rows[0].apellido}` : null;
+
+        res.json({ ...plaza, docente: docenteNombre, director: directorNombre });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar la práctica del estudiante" });
+    }
 });
 
 module.exports = router;

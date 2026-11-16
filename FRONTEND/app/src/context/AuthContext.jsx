@@ -1,5 +1,14 @@
 import { createContext, useContext, useState } from "react";
 
+/**
+ * src/context/AuthContext.jsx
+ *
+ * Guarda quién inició sesión (lo que devuelve POST /api/login: id_usuario,
+ * nombre, apellido, email, rol) en memoria de React y en localStorage,
+ * para que sobreviva a un refresco de página. No valida nada contra el
+ * backend por sí solo: eso ya lo hizo /api/login antes de llamar a
+ * `iniciarSesion`.
+ */
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -28,4 +37,6 @@ export function AuthProvider({ children }) {
   );
 }
 
+/** Hook para leer el usuario de la sesión actual desde cualquier componente. */
+// eslint-disable-next-line react-refresh/only-export-components -- hook y Provider comparten contexto, se mantienen juntos a propósito
 export const useAuth = () => useContext(AuthContext);

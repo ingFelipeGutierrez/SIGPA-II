@@ -504,12 +504,14 @@ router.get("/asignacion-docente", async (req, res) => {
 });
 
 // Crear asignación (estudiante <-> docente)
+// Mismo caso que en asignacion-plaza: si `estado` es NOT NULL sin DEFAULT en
+// la tabla, hay que mandarlo siempre desde el INSERT.
 router.post("/asignacion-docente", async (req, res) => {
     try {
-        const { id_estudiante, id_docente } = req.body;
+        const { id_estudiante, id_docente, estado } = req.body;
         const resultado = await practicas.query(
-            `INSERT INTO asignacion_docente (id_estudiante, id_docente) VALUES ($1, $2) RETURNING *`,
-            [id_estudiante, id_docente]
+            `INSERT INTO asignacion_docente (id_estudiante, id_docente, estado) VALUES ($1, $2, $3) RETURNING *`,
+            [id_estudiante, id_docente, estado || "ACTIVO"]
         );
         res.status(201).json(resultado.rows[0]);
     } catch (error) {
@@ -617,13 +619,18 @@ router.get("/asignacion-plaza", async (req, res) => {
 });
 
 // Crear asignación de plaza
+// `estado` es NOT NULL en la tabla y no tiene DEFAULT en la base, así que si
+// no se manda explícito el INSERT falla (null value in column "estado"). Por
+// eso se fija aquí en "pendiente" (el primer estado del flujo: pendiente ->
+// en_curso -> aprobada/rechazada/finalizada/cambiada), salvo que quien llama
+// mande otro valor a propósito.
 router.post("/asignacion-plaza", async (req, res) => {
     try {
-        const { id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas } = req.body;
+        const { id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas, estado } = req.body;
         const resultado = await practicas.query(
-            `INSERT INTO asignacion_plaza (id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin || null, horas_requeridas || 160]
+            `INSERT INTO asignacion_plaza (id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas, estado)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [id_grupo, id_estudiante, plaza_id, fecha_inicio, fecha_fin || null, horas_requeridas || 160, estado || "pendiente"]
         );
         res.status(201).json(resultado.rows[0]);
     } catch (error) {

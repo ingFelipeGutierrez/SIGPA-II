@@ -9,6 +9,14 @@ import EstudianteEvaluaciones from "./pages/estudiante/EstudianteEvaluaciones";
 import DocenteInicio from "./pages/docente/DocenteInicio";
 import DocenteEstudiantes from "./pages/docente/DocenteEstudiantes";
 import DocenteBitacoras from "./pages/docente/DocenteBitacoras";
+import DirectorGestionar from "./pages/director/DirectorGestionar";
+import DirectorAsignarDocente from "./pages/director/DirectorAsignarDocente";
+import DirectorAsignarGrupo from "./pages/director/DirectorAsignarGrupo";
+import DirectorPlazas from "./pages/director/DirectorPlazas";
+import DirectorDecidirResultado from "./pages/director/DirectorDecidirResultado";
+import DirectorInstituciones from "./pages/director/DirectorInstituciones";
+import DirectorEstado from "./pages/director/DirectorEstado";
+import DirectorSupervision from "./pages/director/DirectorSupervision";
 import { useAuth } from "./context/AuthContext";
 
 /**
@@ -39,8 +47,20 @@ export default function App() {
         <Route path="bitacoras" element={<DocenteBitacoras />} />
       </Route>
 
-      {/* Paneles de Director y Admin: pendientes de construir. */}
-      <Route path="/director/*" element={<PanelProvisional titulo="Panel Director" />} />
+      <Route path="/director" element={<RutaPrivada rol="DIRECTOR"><PanelDirector /></RutaPrivada>}>
+        <Route index element={<PaginaPendiente titulo="Inicio" />} />
+        <Route path="practicas" element={<DirectorGestionar />} />
+        <Route path="practicas/docente" element={<DirectorAsignarDocente />} />
+        <Route path="practicas/grupo" element={<DirectorAsignarGrupo />} />
+        <Route path="practicas/plazas" element={<DirectorPlazas />} />
+        <Route path="practicas/resultado" element={<DirectorDecidirResultado />} />
+        <Route path="instituciones" element={<DirectorInstituciones />} />
+        <Route path="estado" element={<DirectorEstado />} />
+        <Route path="supervision" element={<DirectorSupervision />} />
+        <Route path="reportes" element={<PaginaPendiente titulo="Reportes" />} />
+      </Route>
+
+      {/* Panel de Admin: pendiente de construir. */}
       <Route path="/admin/*" element={<PanelProvisional titulo="Panel Super Admin" />} />
     </Routes>
   );
@@ -76,6 +96,35 @@ function PanelDocente() {
         { icono: "📝", etiqueta: "Bitácoras por revisar", ruta: "bitacoras" },
       ]}
     />
+  );
+}
+
+/** Menú lateral del panel del Director (CU 1 a 7). */
+function PanelDirector() {
+  return (
+    <PanelLayout
+      titulo="Panel del Director"
+      rolClase="rol-director"
+      rolEtiqueta="Director de Programa"
+      menu={[
+        { icono: "🏠", etiqueta: "Inicio", ruta: "" },
+        { icono: "📋", etiqueta: "Gestionar prácticas", ruta: "practicas" },
+        { icono: "🏫", etiqueta: "Instituciones receptoras", ruta: "instituciones" },
+        { icono: "📊", etiqueta: "Estado de las prácticas", ruta: "estado" },
+        { icono: "⏱️", etiqueta: "Supervisión de horas", ruta: "supervision" },
+        { icono: "📈", etiqueta: "Reportes", ruta: "reportes" },
+      ]}
+    />
+  );
+}
+
+/** Página de una sección del panel del Director aún en construcción. */
+function PaginaPendiente({ titulo }) {
+  return (
+    <div className="page">
+      <div className="page-title"><h1>{titulo}</h1></div>
+      <div className="card vacio">Esta sección está en construcción. Vuelve pronto.</div>
+    </div>
   );
 }
 

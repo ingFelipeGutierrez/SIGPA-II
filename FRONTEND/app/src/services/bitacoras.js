@@ -25,3 +25,8 @@ export const solicitarCorreccion = (id, motivo) =>
 /** Todas las bitácoras reales de los estudiantes a cargo de un docente. */
 export const obtenerBitacorasDocente = (idDocente) =>
   apiGet(`${BASE}/docente-real/${idDocente}`);
+
+/** Todas las bitácoras de una asignación de plaza puntual (usado por el
+ *  panel del Director en "Horas del estudiante", CU 6). */
+export const obtenerBitacorasPorAsignacion = (idAsignacion) =>
+  apiGet(`${BASE}/docente/${idAsignacion}`);

@@ -5,6 +5,9 @@ const practicas = require("../db/practicas");
 // ms_practicas: nunca se cruzan con un JOIN de SQL, el cruce se hace en
 // JavaScript (ver mi-practica y calificacion-bitacora/asignacion abajo).
 const neondb = require("../db/neondb");
+// Solo para /practicas-completas: necesita las horas cumplidas, que viven
+// en la colección "bitacora" de MongoDB (base ms_seguimiento).
+const { getDb } = require("../db/mongo");
 
 // Traer convenios
 router.get("/convenios", async (req, res) => {
@@ -370,6 +373,7 @@ router.get("/plazas", async (req, res) => {
     try {
         const resultado = await practicas.query(`
             SELECT p.id_plaza, p.institucion_id, p.convenio_id, p.capacidad, p.estado, p.jornada,
+                   p.descripcion, p.motivo_rechazo,
                    i.nombre AS institucion
             FROM plaza p JOIN institucion_receptora i ON p.institucion_id = i.id_institucion
             ORDER BY p.id_plaza
@@ -382,9 +386,13 @@ router.get("/plazas", async (req, res) => {
 });
 
 // Crear plaza (busca el convenio más reciente de la institución automáticamente)
+// CU 2 "Registrar Plaza de Práctica": `descripcion` ("funciones", opcional) y
+// `motivo_rechazo` (abajo, en el PUT) necesitan las columnas plaza.descripcion
+// y plaza.motivo_rechazo — agrégalas antes de usar este endpoint con:
+//   ALTER TABLE plaza ADD COLUMN descripcion TEXT, ADD COLUMN motivo_rechazo TEXT;
 router.post("/plazas", async (req, res) => {
     try {
-        const { institucion_id, capacidad, jornada } = req.body;
+        const { institucion_id, capacidad, jornada, descripcion } = req.body;
 
         const conv = await practicas.query(
             `SELECT id_convenio FROM convenio WHERE institucion_id = $1 ORDER BY fecha_inicio DESC LIMIT 1`,
@@ -396,9 +404,9 @@ router.post("/plazas", async (req, res) => {
         const convenioId = conv.rows[0].id_convenio;
 
         const resultado = await practicas.query(
-            `INSERT INTO plaza (institucion_id, convenio_id, capacidad, jornada)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [institucion_id, convenioId, capacidad, jornada]
+            `INSERT INTO plaza (institucion_id, convenio_id, capacidad, jornada, descripcion)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [institucion_id, convenioId, capacidad, jornada, descripcion || null]
         );
         res.status(201).json(resultado.rows[0]);
     } catch (error) {
@@ -407,13 +415,13 @@ router.post("/plazas", async (req, res) => {
     }
 });
 
-// Actualizar estado de una plaza (aprobar/rechazar)
+// Actualizar estado de una plaza (aprobar/rechazar), con el motivo cuando se rechaza
 router.put("/plazas/:id", async (req, res) => {
     try {
-        const { estado } = req.body;
+        const { estado, motivo_rechazo } = req.body;
         const resultado = await practicas.query(
-            `UPDATE plaza SET estado = $1 WHERE id_plaza = $2 RETURNING *`,
-            [estado, req.params.id]
+            `UPDATE plaza SET estado = $1, motivo_rechazo = $2 WHERE id_plaza = $3 RETURNING *`,
+            [estado, motivo_rechazo || null, req.params.id]
         );
         if (resultado.rows.length === 0) return res.status(404).json({ error: "No encontrada" });
         res.json(resultado.rows[0]);
@@ -917,6 +925,76 @@ router.get("/estudiantes-docente/:idDocente", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error al consultar los estudiantes del docente" });
+    }
+});
+
+// Vista agregada para el panel del Director (CU 7 "Consultar Estado General
+// de las Prácticas" y CU 6 "Supervisar Cumplimiento de Horas"): TODAS las
+// asignaciones de plaza, con institución/grupo/tipo/nivel ya resueltos (un
+// solo JOIN dentro de ms_practicas), más el nombre del estudiante y del
+// docente asesor (resueltos en JavaScript contra neondb, nunca con un JOIN
+// cruzado) y las horas ya cumplidas según las bitácoras aprobadas en Mongo.
+router.get("/practicas-completas", async (req, res) => {
+    try {
+        const asignaciones = await practicas.query(`
+            SELECT ap.id_asignacion, ap.id_estudiante, ap.id_grupo, ap.plaza_id,
+                   ap.fecha_inicio, ap.fecha_fin, ap.horas_requeridas, ap.estado, ap.motivo_rechazo,
+                   p.jornada, p.institucion_id, i.nombre AS institucion,
+                   g.nombre AS grupo_nombre, t.nombre AS tipo_practica, n.nombre AS nivel_practica
+            FROM asignacion_plaza ap
+            JOIN plaza p ON ap.plaza_id = p.id_plaza
+            JOIN institucion_receptora i ON p.institucion_id = i.id_institucion
+            JOIN grupo_practica g ON ap.id_grupo = g.id_grupo
+            JOIN tipo_practica t ON g.tipo_practica_id = t.id_tipo_practica
+            JOIN nivel_practica n ON g.nivel_practica_id = n.id_nivel_practica
+            ORDER BY ap.id_asignacion DESC
+        `);
+
+        const asigDocentes = await practicas.query(
+            "SELECT id_estudiante, id_docente FROM asignacion_docente WHERE estado = 'ACTIVO'"
+        );
+        const docentePorEstudiante = {};
+        asigDocentes.rows.forEach((d) => { docentePorEstudiante[d.id_estudiante] = d.id_docente; });
+
+        const idsEstudiantes = asignaciones.rows.map((a) => a.id_estudiante);
+        const idsDocentes = Object.values(docentePorEstudiante);
+        const idsUsuarios = [...new Set([...idsEstudiantes, ...idsDocentes])];
+        const usuarios = idsUsuarios.length
+            ? await neondb.query("SELECT id_usuario, nombre, apellido FROM usuario WHERE id_usuario = ANY($1)", [idsUsuarios])
+            : { rows: [] };
+        const nombrePorId = {};
+        usuarios.rows.forEach((u) => { nombrePorId[u.id_usuario] = `${u.nombre} ${u.apellido}`; });
+
+        // El "programa" del estudiante (CU 7, modal "Detalle de la práctica")
+        // vive en la tabla estudiante, no en usuario.
+        const programas = idsEstudiantes.length
+            ? await neondb.query("SELECT id_usuario, programa FROM estudiante WHERE id_usuario = ANY($1)", [idsEstudiantes])
+            : { rows: [] };
+        const programaPorEstudiante = {};
+        programas.rows.forEach((e) => { programaPorEstudiante[e.id_usuario] = e.programa; });
+
+        const db = getDb();
+        const sumasHoras = await db.collection("bitacora").aggregate([
+            { $match: { estado: "aprobada" } },
+            { $group: { _id: "$id_asignacion", horas_cumplidas: { $sum: "$horas_registradas" } } },
+        ]).toArray();
+        const horasPorAsignacion = {};
+        sumasHoras.forEach((s) => { horasPorAsignacion[s._id] = s.horas_cumplidas || 0; });
+
+        const resultado = asignaciones.rows.map((a) => {
+            const idDocente = docentePorEstudiante[a.id_estudiante];
+            return {
+                ...a,
+                estudiante: nombrePorId[a.id_estudiante] || "Estudiante",
+                programa: programaPorEstudiante[a.id_estudiante] || null,
+                docente_asesor: idDocente ? (nombrePorId[idDocente] || null) : null,
+                horas_cumplidas: horasPorAsignacion[a.id_asignacion] || 0,
+            };
+        });
+        res.json(resultado);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al consultar las prácticas" });
     }
 });
 

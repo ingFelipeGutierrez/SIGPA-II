@@ -86,6 +86,7 @@ const COLORES_ESTADO = {
   finalizada: "gris",
   Cambiada: "gris",
   cambiada: "gris",
+  "Sin convenio": "gris",
 };
 
 /** Clase CSS del badge (sin el texto) para un estado dado. */
@@ -126,4 +127,33 @@ export function textoEstadoPractica(estado) {
 export function contarPalabras(texto) {
   const limpio = String(texto || "").trim();
   return limpio ? limpio.split(/\s+/).length : 0;
+}
+
+/** Días restantes hasta la fecha de fin de un convenio (negativo si ya
+ *  venció). `null` si la institución aún no tiene convenio registrado. */
+export function diasRestantesConvenio(fechaFin) {
+  if (!fechaFin) return null;
+  const hoy = new Date();
+  const fin = new Date(fechaFin);
+  return Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
+}
+
+/** Estado de vigencia de un convenio a partir de su fecha de fin, con el
+ *  mismo umbral (60 días) que usa el reporte de convenios del backend
+ *  (BACKEND/routes/reportes.js, GET /convenios), para que el panel del
+ *  Director y el reporte siempre muestren el mismo estado. */
+export function estadoConvenio(fechaFin) {
+  if (!fechaFin) return "Sin convenio";
+  const dias = diasRestantesConvenio(fechaFin);
+  if (dias < 0) return "Vencido";
+  if (dias <= 60) return "Próximo a vencer";
+  return "Vigente";
+}
+
+/** Primera letra en mayúscula y el resto en minúscula: el tipo de
+ *  institución llega del backend en mayúsculas ("OFICIAL") y se muestra
+ *  como "Oficial". */
+export function capitalizar(texto) {
+  const t = String(texto || "");
+  return t ? t[0].toUpperCase() + t.slice(1).toLowerCase() : "";
 }

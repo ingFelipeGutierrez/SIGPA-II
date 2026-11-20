@@ -46,7 +46,6 @@ export default function ModalResultadoPractica({ practica: p, onClose, onDecidid
 
   const porcentajeHoras = p.horas_requeridas > 0 ? Math.round((p.horas_cumplidas / p.horas_requeridas) * 100) : 0;
   const horasIncompletas = p.horas_cumplidas < p.horas_requeridas;
-  const avisoListo = bitacoras !== null && (horasIncompletas || conteo.pendiente > 0);
 
   async function decidir(estado, motivoRechazo = null) {
     setGuardando(true);
@@ -85,8 +84,7 @@ export default function ModalResultadoPractica({ practica: p, onClose, onDecidid
       onClose={onClose}
       pie={
         <>
-          <button className="button-secondary" data-cerrar="">Cancelar</button>
-          <button className="button-secondary" onClick={alPulsarRechazar} disabled={guardando}>
+          <button className="button-danger" onClick={alPulsarRechazar} disabled={guardando}>
             Rechazar práctica
           </button>
           <button className="button-primary" onClick={() => decidir("aprobada")} disabled={guardando}>
@@ -95,10 +93,14 @@ export default function ModalResultadoPractica({ practica: p, onClose, onDecidid
         </>
       }
     >
-      {avisoListo && (
+      {horasIncompletas && (
         <div className="aviso aviso-ambar">
-          ⚠️ {horasIncompletas ? "El estudiante no completó las horas requeridas. " : ""}
-          {conteo.pendiente > 0 ? `Tiene ${conteo.pendiente} bitácora(s) pendiente(s) de revisión.` : ""}
+          ⚠️ El estudiante no alcanzó las horas requeridas ({formatearHoras(p.horas_cumplidas)} / {p.horas_requeridas}).
+        </div>
+      )}
+      {bitacoras !== null && conteo.pendiente > 0 && (
+        <div className="aviso aviso-ambar">
+          ⚠️ Tiene {conteo.pendiente} bitácora(s) pendientes de revisión.
         </div>
       )}
 

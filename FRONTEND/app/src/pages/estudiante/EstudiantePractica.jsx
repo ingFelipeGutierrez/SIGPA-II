@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useMiPractica } from "../../hooks/useMiPractica";
-import { formatearFecha, formatearHoras } from "../../utils/formato";
+import { formatearFecha, formatearHoras, textoEstadoPractica, fechaUltimoEstado } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/estudiante/EstudiantePractica.jsx
@@ -18,7 +19,7 @@ export default function EstudiantePractica() {
   const [modal, setModal] = useState(null); // { titulo, cuerpo } | null
   const [mostrarDetalleHoras, setMostrarDetalleHoras] = useState(false);
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   if (!pr) {
     return (
@@ -92,7 +93,13 @@ export default function EstudiantePractica() {
       <div className="grid-2">
         <div className="card">
           <div className="section-title">Estado de la práctica</div>
-          <Badge estado={pr.estado} />
+          <Badge estado={textoEstadoPractica(pr.estado)} />
+          <p className="dato-linea" style={{ marginTop: 12, color: "var(--gris-texto)" }}>
+            Última actualización: {formatearFecha(fechaUltimoEstado(pr))}
+          </p>
+          {pr.estado === "finalizada" && (
+            <p className="dato-linea">Pendiente de la decisión del director.</p>
+          )}
           {pr.estado === "rechazada" && (
             <>
               <br />

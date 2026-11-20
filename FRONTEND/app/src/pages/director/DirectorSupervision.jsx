@@ -4,6 +4,7 @@ import { obtenerBitacorasPorAsignacion } from "../../services/bitacoras";
 import { formatearFecha, formatearHoras } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
+import Cargando from "../../components/Cargando";
 
 const CLASE_NIVEL = { Bajo: "nivel-bajo", Medio: "nivel-medio", Alto: "nivel-alto" };
 
@@ -20,12 +21,17 @@ export default function DirectorSupervision() {
   const [filtroNivel, setFiltroNivel] = useState("");
   const [seleccionado, setSeleccionado] = useState(null); // fila con "Ver detalle" abierto
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   if (estudiantes.length === 0) {
     return (
       <div className="page">
         <Cabecera />
+        <div className="cards" style={{ marginBottom: 20 }}>
+          <TarjetaKpi titulo="Estudiantes en práctica" numero={0} />
+          <TarjetaKpi titulo="Cumplimiento promedio" numero="0%" />
+          <TarjetaKpi titulo="Con bajo cumplimiento" numero={0} />
+        </div>
         <div className="card vacio">No hay estudiantes en práctica para supervisar.</div>
       </div>
     );
@@ -144,7 +150,7 @@ function ModalHorasEstudiante({ estudiante: e, onClose }) {
 
       <div className="section-title" style={{ marginTop: 14 }}>Bitácoras aprobadas</div>
       {bitacoras === null ? (
-        <p className="vacio">Cargando…</p>
+        <Cargando />
       ) : aprobadas.length ? (
         <table className="apilable">
           <thead><tr><th>Fecha</th><th>Actividad</th><th>Horas</th></tr></thead>

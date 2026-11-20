@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAsignarDocente } from "../../hooks/useAsignarDocente";
 import { asignarDocente } from "../../services/practicas";
 import { useToast } from "../../components/ToastContext";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorAsignarDocente.jsx
@@ -19,7 +20,20 @@ export default function DirectorAsignarDocente() {
   const [error, setError] = useState("");
   const [asignando, setAsignando] = useState(false);
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
+
+  // Sin estudiantes pendientes: igual que el prototipo, solo el título y la tarjeta vacía.
+  if (estudiantes.length === 0) {
+    return (
+      <div className="page">
+        <div className="page-title">
+          <Link to="/director/practicas" className="enlace-volver">← Gestionar prácticas</Link>
+          <h1>Asignar docente asesor</h1>
+        </div>
+        <div className="card vacio">Todos los estudiantes ya tienen docente asesor.</div>
+      </div>
+    );
+  }
 
   function alternar(idEstudiante) {
     setMarcados((actual) => {
@@ -31,10 +45,12 @@ export default function DirectorAsignarDocente() {
   }
 
   const docenteSeleccionado = docentes.find((d) => String(d.id_usuario) === String(docenteId));
-  const puedeAsignar = marcados.size > 0 && docenteSeleccionado;
 
   async function asignar() {
-    if (!puedeAsignar) return;
+    if (marcados.size === 0 || !docenteSeleccionado) {
+      mostrarToast("Selecciona al menos un estudiante y un docente.", "error");
+      return;
+    }
     const disponibles = docenteSeleccionado.cupoMaximo - docenteSeleccionado.asignados;
     if (marcados.size > disponibles) {
       setError(
@@ -51,7 +67,7 @@ export default function DirectorAsignarDocente() {
       setDocenteId("");
       recargar();
     } catch (e) {
-      setError(e.message || "Ocurrió un error al asignar el docente asesor.");
+      mostrarToast(e.message || "No se pudo asignar.", "error");
     } finally {
       setAsignando(false);
     }
@@ -62,60 +78,54 @@ export default function DirectorAsignarDocente() {
       <div className="page-title">
         <Link to="/director/practicas" className="enlace-volver">← Gestionar prácticas</Link>
         <h1>Asignar docente asesor</h1>
-        <p>Marca uno o varios estudiantes y elige el docente asesor que les corresponde.</p>
       </div>
 
-      <div className="table-container" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-        <div>
-          <h3 style={{ marginTop: 0 }}>Estudiantes sin docente asesor</h3>
-          {estudiantes.length === 0 ? (
-            <div className="vacio">Todos los estudiantes ya tienen docente asesor.</div>
-          ) : (
-            <div className="lista-seleccionable">
-              {estudiantes.map((e) => (
-                <label key={e.id_usuario} className="fila-seleccionable">
-                  <input
-                    type="checkbox"
-                    checked={marcados.has(e.id_usuario)}
-                    onChange={() => alternar(e.id_usuario)}
-                  />
-                  <span>{e.nombre}</span>
-                  <span className="dato-secundario">{e.institucionOGrupo}</span>
-                </label>
-              ))}
-            </div>
-          )}
+      <div className="grid-2">
+        <div className="card">
+          <div className="section-title">Estudiantes sin docente asesor</div>
+          <ul className="lista-seleccion">
+            {estudiantes.map((e) => (
+              <li key={e.id_usuario}>
+                <input
+                  type="checkbox"
+                  checked={marcados.has(e.id_usuario)}
+                  onChange={() => alternar(e.id_usuario)}
+                />{" "}
+                <span>
+                  {e.nombre}
+                  <small> · {e.institucionOGrupo}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div>
-          <h3 style={{ marginTop: 0 }}>Docentes asesores</h3>
-          <div className="lista-seleccionable">
+        <div className="card">
+          <div className="section-title">Docentes asesores</div>
+          <ul className="lista-seleccion">
             {docentes.map((d) => (
-              <label
-                key={d.id_usuario}
-                className={`fila-seleccionable ${!d.disponible ? "fila-deshabilitada" : ""}`}
-              >
+              <li key={d.id_usuario} className={!d.disponible ? "deshabilitada" : ""}>
                 <input
                   type="radio"
-                  name="docente"
+                  name="doc"
                   disabled={!d.disponible}
                   checked={String(docenteId) === String(d.id_usuario)}
                   onChange={() => { setDocenteId(d.id_usuario); setError(""); }}
-                />
-                <span>{d.nombre}</span>
-                <span className="dato-secundario">
-                  {d.disponible ? `${d.asignados} / ${d.cupoMaximo}` : "Sin disponibilidad"}
+                />{" "}
+                <span>
+                  {d.nombre}
+                  <small> · {d.asignados} / {d.cupoMaximo}{!d.disponible ? " · Sin disponibilidad" : ""}</small>
                 </span>
-              </label>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 
       {error && <div className="campo-error" style={{ display: "block", marginTop: 14 }}>{error}</div>}
 
       <div style={{ textAlign: "right", marginTop: 16 }}>
-        <button className="button-primary" onClick={asignar} disabled={!puedeAsignar || asignando}>
+        <button className="button-primary" onClick={asignar} disabled={asignando}>
           {asignando ? "Asignando…" : "Asignar"}
         </button>
       </div>

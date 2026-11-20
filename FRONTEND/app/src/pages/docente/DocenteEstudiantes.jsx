@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useDatosDocente } from "../../hooks/useDatosDocente";
 import { formatearFecha, formatearHoras, textoEstadoPractica } from "../../utils/formato";
 import Badge from "../../components/Badge";
+import Cargando from "../../components/Cargando";
 
 const ESTADOS_PRACTICA = ["pendiente", "en_curso", "finalizada", "aprobada", "rechazada"];
 
@@ -28,7 +29,7 @@ export default function DocenteEstudiantes() {
     [estudiantes]
   );
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   const lista = estudiantes.filter(
     (e) => (!fInstitucion || e.institucion === fInstitucion) && (!fEstado || e.estado === fEstado)
@@ -79,7 +80,7 @@ export default function DocenteEstudiantes() {
           </thead>
           <tbody>
             {lista.map((e) => (
-              <tr key={e.id_estudiante}>
+              <tr key={e.id_estudiante} className={seleccionado === e.id_estudiante ? "seleccionada" : ""}>
                 <td data-label="Estudiante">{e.estudiante}</td>
                 <td data-label="Institución">{e.institucion || "Sin asignar"}</td>
                 <td data-label="Horas">{formatearHoras(e.horasCumplidas)} / {e.horas_requeridas || 0}</td>

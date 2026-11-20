@@ -36,6 +36,9 @@ export function useAsignarGrupo() {
   const [plazasDisponibles, setPlazasDisponibles] = useState([]);
   const [tipos, setTipos] = useState([]);
   const [niveles, setNiveles] = useState([]);
+  // Mayor numero_grupo existente (de TODOS los grupos, aunque aún no tengan
+  // asignaciones): el grupo nuevo toma este valor + 1.
+  const [maxNumeroGrupo, setMaxNumeroGrupo] = useState(0);
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {
@@ -138,6 +141,7 @@ export function useAsignarGrupo() {
         .filter((p) => p.cuposLibres > 0)
     );
 
+    setMaxNumeroGrupo(gruposDb.reduce((m, g) => Math.max(m, Number(g.numero_grupo) || 0), 0));
     setTipos(tiposDb);
     setNiveles(nivelesDb);
     setCargando(false);
@@ -148,5 +152,5 @@ export function useAsignarGrupo() {
     cargar();
   }, [cargar]);
 
-  return { estudiantes, grupos, plazasDisponibles, tipos, niveles, cargando, recargar: cargar };
+  return { estudiantes, grupos, plazasDisponibles, tipos, niveles, maxNumeroGrupo, cargando, recargar: cargar };
 }

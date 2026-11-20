@@ -5,6 +5,7 @@ import { useToast } from "../../components/ToastContext";
 import { formatearFecha, capitalizar, fechaHoy } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorInstituciones.jsx
@@ -20,7 +21,7 @@ export default function DirectorInstituciones() {
   const [formAbierto, setFormAbierto] = useState(false);
   const [institucionAbierta, setInstitucionAbierta] = useState(null); // institución con "Ver convenio" abierto
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   return (
     <div className="page">

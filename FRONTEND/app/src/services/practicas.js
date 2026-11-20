@@ -6,6 +6,7 @@
  * Usado por el panel de Estudiante (consultar su plaza y sus notas) y,
  * más adelante, por Docente/Director/Admin.
  */
+import { conEstadoPractica } from "../utils/formato";
 import { apiGet, apiEnviar } from "./api";
 
 const BASE = "/api/practicas";
@@ -90,8 +91,9 @@ export const renovarConvenio = (idInstitucion, nuevaFin) =>
 
 /** TODAS las prácticas (asignacion_plaza) con institución, grupo, tipo,
  *  nivel, estudiante, docente asesor y horas cumplidas ya resueltos en
- *  el backend, para la página "Estado de las prácticas". */
-export const obtenerPracticasCompletas = () => apiGet(`${BASE}/practicas-completas`);
+ *  el backend, para la página "Estado de las prácticas".
+ *  El estado ya viene recalculado con la regla del maestro (estadoPractica). */
+export const obtenerPracticasCompletas = async () => (await apiGet(`${BASE}/practicas-completas`)).map(conEstadoPractica);
 
 // --- Panel del Director: Gestionar prácticas (CU 1 y CU 2) ---
 

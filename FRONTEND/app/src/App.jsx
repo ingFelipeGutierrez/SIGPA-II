@@ -17,6 +17,7 @@ import DirectorDecidirResultado from "./pages/director/DirectorDecidirResultado"
 import DirectorInstituciones from "./pages/director/DirectorInstituciones";
 import DirectorEstado from "./pages/director/DirectorEstado";
 import DirectorSupervision from "./pages/director/DirectorSupervision";
+import DirectorInicio from "./pages/director/DirectorInicio";
 import { useAuth } from "./context/AuthContext";
 
 /**
@@ -48,7 +49,7 @@ export default function App() {
       </Route>
 
       <Route path="/director" element={<RutaPrivada rol="DIRECTOR"><PanelDirector /></RutaPrivada>}>
-        <Route index element={<PaginaPendiente titulo="Inicio" />} />
+        <Route index element={<DirectorInicio />} />
         <Route path="practicas" element={<DirectorGestionar />} />
         <Route path="practicas/docente" element={<DirectorAsignarDocente />} />
         <Route path="practicas/grupo" element={<DirectorAsignarGrupo />} />

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useGestionarPracticas } from "../../hooks/useGestionarPracticas";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorGestionar.jsx
@@ -11,7 +12,7 @@ export default function DirectorGestionar() {
   const { conteos, cargando } = useGestionarPracticas();
   const navigate = useNavigate();
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   return (
     <div className="page">

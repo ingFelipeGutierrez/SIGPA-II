@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { obtenerEstudiantesDocente, obtenerCalificacionesPorAsignacion } from "../services/practicas";
 import { obtenerBitacorasDocente } from "../services/bitacoras";
+import { conEstadoPractica } from "../utils/formato";
 
 /**
  * src/hooks/useDatosDocente.js
@@ -29,7 +30,7 @@ export function useDatosDocente(idDocente) {
         obtenerEstudiantesDocente(idDocente),
         obtenerBitacorasDocente(idDocente),
       ]);
-      setEstudiantesBase(ests);
+      setEstudiantesBase(ests.map((e) => (e.id_asignacion ? conEstadoPractica({ ...e, tiene_docente: true }) : e)));
       setBitacoras(bits);
 
       // La nota vive en calificacion_bitacora (Postgres), indexada por

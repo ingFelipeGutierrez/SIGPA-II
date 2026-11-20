@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useDatosDocente } from "../../hooks/useDatosDocente";
 import { formatearFecha, primerNombre } from "../../utils/formato";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/docente/DocenteInicio.jsx
@@ -14,7 +15,7 @@ export default function DocenteInicio() {
   const navigate = useNavigate();
   const { estudiantes, bitacoras: bits, notaPorBitacora, cargando } = useDatosDocente(usuario.id_usuario);
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   const porRevisar = bits.filter((b) => b.estado === "pendiente").length;
   const sinNota = bits.filter((b) => b.estado === "aprobada" && notaPorBitacora[b._id] === undefined).length;

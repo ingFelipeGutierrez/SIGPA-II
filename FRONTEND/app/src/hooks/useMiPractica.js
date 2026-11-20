@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { obtenerMiPractica } from "../services/practicas";
 import { obtenerBitacorasEstudiante } from "../services/bitacoras";
+import { conEstadoPractica } from "../utils/formato";
 
 /**
  * src/hooks/useMiPractica.js
@@ -28,7 +29,7 @@ export function useMiPractica(idEstudiante) {
         obtenerMiPractica(idEstudiante),
         obtenerBitacorasEstudiante(idEstudiante),
       ]);
-      setPractica(pr);
+      setPractica(conEstadoPractica(pr));
       setBitacoras(bits);
     } catch (e) {
       setError(e.message);

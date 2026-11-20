@@ -7,6 +7,7 @@ import { obtenerEvidenciasDeBitacora } from "../../services/evidencias";
 import { formatearFecha, formatearHoras, formatearTamano, textoEstadoBitacora } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/estudiante/EstudianteBitacoras.jsx
@@ -49,7 +50,7 @@ export default function EstudianteBitacoras() {
     catch { setEvidenciasModal([]); }
   }
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   const enCurso = pr?.estado === "en_curso";
   // "Sin resultado" = el director todavía no decidió aprobada/rechazada:

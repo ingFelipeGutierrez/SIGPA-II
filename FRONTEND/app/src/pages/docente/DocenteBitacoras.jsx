@@ -7,6 +7,7 @@ import { obtenerRetroalimentacionEstudiante } from "../../services/retroalimenta
 import { formatearFecha, formatearHoras, formatearNota, textoEstadoBitacora } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import ModalRevisionBitacora from "../../components/ModalRevisionBitacora";
+import Cargando from "../../components/Cargando";
 
 // Mismo orden de prioridad que ORDEN_ESTADO en el prototipo original:
 // lo pendiente primero, luego lo que requiere corrección, y al final lo
@@ -69,7 +70,7 @@ export default function DocenteBitacoras() {
     }
   }
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   let lista = bits;
   if (fEstudiante) lista = lista.filter((b) => String(b.estudiante_id) === fEstudiante);

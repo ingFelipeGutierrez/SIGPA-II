@@ -5,6 +5,7 @@ import { agregarEstudianteAGrupo, crearAsignacionPlaza, crearGrupo } from "../..
 import { useToast } from "../../components/ToastContext";
 import { formatearFecha } from "../../utils/formato";
 import Badge from "../../components/Badge";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorAsignarGrupo.jsx
@@ -15,7 +16,7 @@ import Badge from "../../components/Badge";
  * grupo.
  */
 export default function DirectorAsignarGrupo() {
-  const { estudiantes, grupos, plazasDisponibles, tipos, niveles, cargando, recargar } = useAsignarGrupo();
+  const { estudiantes, grupos, plazasDisponibles, tipos, niveles, maxNumeroGrupo, cargando, recargar } = useAsignarGrupo();
   const { mostrarToast } = useToast();
   const [marcados, setMarcados] = useState(new Set());
   const [grupoId, setGrupoId] = useState("");
@@ -32,7 +33,19 @@ export default function DirectorAsignarGrupo() {
   const [horasRequeridas, setHorasRequeridas] = useState("160");
   const [erroresNuevo, setErroresNuevo] = useState({});
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
+
+  if (estudiantes.length === 0) {
+    return (
+      <div className="page">
+        <div className="page-title">
+          <Link to="/director/practicas" className="enlace-volver">← Gestionar prácticas</Link>
+          <h1>Asignar estudiantes a grupo de práctica</h1>
+        </div>
+        <div className="card vacio">No hay estudiantes pendientes de agrupación.</div>
+      </div>
+    );
+  }
 
   function alternar(idEstudiante) {
     setMarcados((actual) => {
@@ -66,7 +79,8 @@ export default function DirectorAsignarGrupo() {
   }
 
   async function asignar() {
-    if (marcados.size === 0 || !grupoId) return;
+    if (marcados.size === 0) { mostrarToast("Selecciona al menos un estudiante.", "error"); return; }
+    if (!grupoId) { mostrarToast("Selecciona un grupo.", "error"); return; }
 
     if (esNuevo) {
       if (!validarNuevoGrupo()) return;
@@ -86,7 +100,7 @@ export default function DirectorAsignarGrupo() {
         const nuevoGrupo = await crearGrupo({
           tipo_practica_id: Number(tipoId),
           nivel_practica_id: Number(nivelId),
-          numero_grupo: grupos.length + 1,
+          numero_grupo: maxNumeroGrupo + 1, // D3: máximo existente + 1
           nombre: nombre.trim(),
           convenio_id: plazaElegida.convenio_id,
         });
@@ -141,11 +155,26 @@ export default function DirectorAsignarGrupo() {
   }
 
   async function asignarEstudiantesAGrupo(idGrupo, { plaza_id, fecha_inicio, fecha_fin, horas_requeridas }) {
+    let asignados = 0;
     for (const idEstudiante of marcados) {
       // Secuencial (no Promise.all): asignacion_plaza depende de que la
       // fila de grupo_estudiante ya exista (restricción del backend).
-      await agregarEstudianteAGrupo(idGrupo, idEstudiante);
-      await crearAsignacionPlaza({ id_grupo: idGrupo, id_estudiante: idEstudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas });
+      try {
+        await agregarEstudianteAGrupo(idGrupo, idEstudiante);
+        await crearAsignacionPlaza({ id_grupo: idGrupo, id_estudiante: idEstudiante, plaza_id, fecha_inicio, fecha_fin, horas_requeridas });
+        asignados += 1;
+      } catch (e) {
+        // D3: si falla a la mitad, se dice cuántos quedaron guardados y
+        // quién falló; la lista se recarga para mostrar solo los pendientes.
+        const quien = estudiantes.find((x) => x.id_usuario === idEstudiante)?.nombre || "un estudiante";
+        setMarcados(new Set());
+        recargar();
+        throw new Error(
+          `Se asignaron ${asignados} de ${marcados.size} estudiantes. Falló con ${quien}: ${e.message || "error desconocido"}. ` +
+          "Los ya asignados quedaron guardados; vuelve a intentar con los restantes.",
+          { cause: e }
+        );
+      }
     }
   }
 
@@ -154,32 +183,31 @@ export default function DirectorAsignarGrupo() {
       <div className="page-title">
         <Link to="/director/practicas" className="enlace-volver">← Gestionar prácticas</Link>
         <h1>Asignar estudiantes a grupo de práctica</h1>
-        <p>Marca los estudiantes que conformarán el grupo y elige un grupo existente o crea uno nuevo.</p>
       </div>
 
-      <div className="table-container">
-        {estudiantes.length === 0 ? (
-          <div className="vacio">No hay estudiantes pendientes de agrupación.</div>
-        ) : (
-          <>
-            <h3 style={{ marginTop: 0 }}>Estudiantes sin grupo</h3>
-            <div className="lista-seleccionable" style={{ marginBottom: 20 }}>
-              {estudiantes.map((e) => (
-                <label key={e.id_usuario} className="fila-seleccionable">
-                  <input type="checkbox" checked={marcados.has(e.id_usuario)} onChange={() => alternar(e.id_usuario)} />
-                  <span>{e.nombre}</span>
-                  <span className="dato-secundario">{e.docenteAsesor}</span>
-                </label>
-              ))}
-            </div>
+      <div className="card">
+        <div className="section-title">Estudiantes sin grupo</div>
+        <ul className="lista-seleccion">
+          {estudiantes.map((e) => (
+            <li key={e.id_usuario}>
+              <input type="checkbox" checked={marcados.has(e.id_usuario)} onChange={() => alternar(e.id_usuario)} />{" "}
+              <span>
+                {e.nombre}
+                <small> · {e.docenteAsesor}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
+      <div className="card" style={{ marginTop: 16 }}>
             <div className="form-group">
               <label>Grupo de práctica</label>
               <select value={grupoId} onChange={(e) => { setGrupoId(e.target.value); setError(""); }}>
                 <option value="">Selecciona…</option>
                 {grupos.map((g) => (
                   <option key={g.id_grupo} value={g.id_grupo}>
-                    {g.institucion_nombre} — {g.nombre} (cupos libres: {g.cuposLibres})
+                    {g.nombre} · {g.institucion_nombre} · {g.cuposLibres} cupos
                   </option>
                 ))}
                 <option value="nuevo">+ Crear nuevo grupo</option>
@@ -187,7 +215,7 @@ export default function DirectorAsignarGrupo() {
             </div>
 
             {grupoExistente && (
-              <div className="card" style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16 }}>
                 {grupoExistente.estadoConvenio === "Vencido" && (
                   <div className="aviso aviso-rojo">
                     ⛔ El convenio de esta institución está vencido. Elige otro grupo o{" "}
@@ -205,7 +233,7 @@ export default function DirectorAsignarGrupo() {
             )}
 
             {esNuevo && (
-              <div className="card" style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16 }}>
                 <div className="form-grid">
                   <div className={`form-group ${erroresNuevo.nombre ? "con-error" : ""}`}>
                     <label>Nombre del grupo</label>
@@ -258,20 +286,14 @@ export default function DirectorAsignarGrupo() {
                 </div>
               </div>
             )}
+      </div>
 
             {error && <div className="campo-error" style={{ display: "block", marginBottom: 14 }}>{error}</div>}
 
-            <div style={{ textAlign: "right" }}>
-              <button
-                className="button-primary"
-                onClick={asignar}
-                disabled={marcados.size === 0 || !grupoId || asignando}
-              >
-                {asignando ? "Asignando…" : "Asignar"}
-              </button>
-            </div>
-          </>
-        )}
+      <div style={{ textAlign: "right", marginTop: 16 }}>
+        <button className="button-primary" onClick={asignar} disabled={asignando}>
+          {asignando ? "Asignando…" : "Asignar"}
+        </button>
       </div>
     </div>
   );

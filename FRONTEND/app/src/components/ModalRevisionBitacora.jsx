@@ -129,7 +129,26 @@ export default function ModalRevisionBitacora({
   }
 
   return (
-    <Modal titulo={`Revisión de bitácora · ${b.estudianteNombre} · ${b.titulo}`} ancho onClose={onClose}>
+    <Modal
+      titulo={`Revisión de bitácora · ${b.estudianteNombre} · ${b.titulo}`}
+      ancho
+      onClose={onClose}
+      pie={
+        // Pie único: "Cerrar" a la izquierda y, solo en la pestaña Detalle de una
+        // bitácora pendiente, las acciones de revisión a su derecha.
+        <>
+          <button className="button-secondary" data-cerrar="">Cerrar</button>
+          {tab === "detalle" && b.estado === "pendiente" && !cerrada && (
+            <>
+              <button className="button-danger" disabled={guardando} onClick={() => setCajaCorreccionAbierta(true)}>
+                Solicitar corrección
+              </button>
+              <button className="button-primary" disabled={guardando} onClick={aprobar}>Aprobar</button>
+            </>
+          )}
+        </>
+      }
+    >
       <div className="tabs">
         <button className={tab === "detalle" ? "activa" : ""} onClick={() => setTab("detalle")}>Detalle</button>
         <button className={tab === "nota" ? "activa" : ""} onClick={() => setTab("nota")}>Nota</button>
@@ -162,12 +181,6 @@ export default function ModalRevisionBitacora({
 
           {b.estado === "pendiente" && !cerrada ? (
             <>
-              <div className="modal-pie" style={{ margin: "16px -22px -20px" }}>
-                <button className="button-danger" disabled={guardando} onClick={() => setCajaCorreccionAbierta(true)}>
-                  Solicitar corrección
-                </button>
-                <button className="button-primary" disabled={guardando} onClick={aprobar}>Aprobar</button>
-              </div>
               {cajaCorreccionAbierta && (
                 <div style={{ marginTop: 14 }}>
                   <div className={`form-group ${errorMotivo ? "con-error" : ""}`}>

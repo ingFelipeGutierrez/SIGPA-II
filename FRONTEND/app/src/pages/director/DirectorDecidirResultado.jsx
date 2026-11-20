@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { usePracticasPorDecidir } from "../../hooks/usePracticasPorDecidir";
 import { formatearHoras, formatearNota } from "../../utils/formato";
 import ModalResultadoPractica from "../../components/ModalResultadoPractica";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorDecidirResultado.jsx
@@ -14,7 +15,7 @@ export default function DirectorDecidirResultado() {
   const { practicas, cargando, recargar } = usePracticasPorDecidir();
   const [practicaAbierta, setPracticaAbierta] = useState(null);
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   return (
     <div className="page">

@@ -98,7 +98,8 @@ body.rol-director   { --acento: #c9820f; }  /* dorado */
     border-radius: 20px;
 }
 .menu { list-style: none; flex: 1; }
-.menu button {
+.menu a { text-decoration: none; }
+.menu button, .menu a {
     width: 100%;
     text-align: left;
     background: none;
@@ -112,8 +113,8 @@ body.rol-director   { --acento: #c9820f; }  /* dorado */
     align-items: center;
     border-left: 3px solid transparent;
 }
-.menu button:hover { background-color: rgba(255, 255, 255, 0.07); color: white; }
-.menu button.active {
+.menu button:hover, .menu a:hover { background-color: rgba(255, 255, 255, 0.07); color: white; }
+.menu button.active, .menu a.active {
     background-color: rgba(255, 255, 255, 0.12);
     color: white;
     border-left-color: var(--acento);
@@ -493,7 +494,7 @@ body.login-body { display: flex; align-items: center; justify-content: center; m
     .login-left { padding: 28px; text-align: center; }
 
     /* Zonas táctiles cómodas */
-    .menu button { padding: 14px 24px; }
+    .menu button, .menu a { padding: 14px 24px; }
     .button-primary, .button-secondary, .button-danger { padding: 11px 16px; }
 }
 
@@ -587,9 +588,9 @@ button.cargando::after {
 }
 
 /* --- Menú lateral: el texto se desliza un poco al pasar el mouse --- */
-.menu button { transition: background-color var(--t-rapida), color var(--t-rapida), padding-left var(--t-rapida) var(--ease), border-color var(--t-normal); }
-.menu button:hover { padding-left: 28px; }
-.menu button.active:hover { padding-left: 24px; }
+.menu button, .menu a { transition: background-color var(--t-rapida), color var(--t-rapida), padding-left var(--t-rapida) var(--ease), border-color var(--t-normal); }
+.menu button:hover, .menu a:hover { padding-left: 28px; }
+.menu button.active:hover, .menu a.active:hover { padding-left: 24px; }
 
 /* --- Barra superior: sombra suave cuando se hace scroll (clase la pone comun.js) --- */
 .topbar { transition: box-shadow var(--t-normal); }
@@ -693,5 +694,20 @@ body.menu-abierto::after { animation: aparecer var(--t-normal) ease-out; }
     .footer-copy { padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
     /* En pantallas táctiles no hay "hover": evita que las tarjetas queden elevadas tras tocar */
     .stat-card:hover { transform: none; box-shadow: none; }
-    .menu button:hover { padding-left: 24px; }
+    .menu button:hover, .menu a:hover { padding-left: 24px; }
 }
+
+/* =========================================================
+   13. <Cargando/> — indicador de carga de las pantallas
+   Anillo giratorio + dinosaurio que rebota (animación recortable:
+   si se quita el .cargando-dino queda solo el spinner).
+========================================================= */
+.cargando-caja { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 48px 10px; color: var(--gris-texto); font-size: 14px; }
+.cargando-anillo {
+    width: 34px; height: 34px;
+    border: 3px solid #dbe3ef; border-top-color: var(--acento);
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+}
+.cargando-dino { font-size: 26px; animation: dino-salta 0.9s var(--ease) infinite; }
+@keyframes dino-salta { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }

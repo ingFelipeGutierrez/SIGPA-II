@@ -7,6 +7,7 @@ import { obtenerActividadesDeGrupo } from "../../services/actividades";
 import { obtenerBitacorasEstudiante, registrarBitacora, corregirBitacora } from "../../services/bitacoras";
 import { obtenerEvidenciasDeBitacora, registrarEvidencia, eliminarEvidencia } from "../../services/evidencias";
 import { fechaHoy, formatearFecha, formatearHoras } from "../../utils/formato";
+import Cargando from "../../components/Cargando";
 
 const PASOS = ["Actividad", "Descripción", "Evidencias", "Revisión"];
 
@@ -164,7 +165,7 @@ export default function NuevaBitacora() {
     }
   }
 
-  if (cargandoInicial) return <p className="vacio">Cargando…</p>;
+  if (cargandoInicial) return <Cargando />;
 
   const actividadSeleccionada = actividadesAbiertas.find((a) => a._id === actividadId)
     || (modoCorreccion ? { _id: actividadId, titulo: bitacoraOriginal?.actividad_titulo || "Actividad" } : null);

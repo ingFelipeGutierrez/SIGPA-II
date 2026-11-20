@@ -6,6 +6,7 @@ import { obtenerBitacorasEstudiante } from "../../services/bitacoras";
 import { obtenerRetroalimentacionEstudiante } from "../../services/retroalimentacion";
 import { formatearFecha, formatearNota } from "../../utils/formato";
 import Modal from "../../components/Modal";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/estudiante/EstudianteEvaluaciones.jsx
@@ -69,7 +70,7 @@ export default function EstudianteEvaluaciones() {
 
   function limpiarFiltro() { setDesde(""); setHasta(""); }
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   return (
     <div className="page">

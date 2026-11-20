@@ -50,7 +50,11 @@ export function usePlazasDirector() {
       return {
         ...p,
         institucion_nombre: inst ? inst.nombre : "—",
+        convenio_fecha_inicio: inst ? inst.fecha_inicio : null,
         convenio_fecha_fin: inst ? inst.fecha_fin : null,
+        institucion_direccion: inst ? inst.direccion : null,
+        institucion_contacto: inst ? inst.contacto : null,
+        institucion_tipo: inst ? inst.tipo : null,
         estadoConvenio: inst ? estadoConvenio(inst.fecha_fin) : "Sin convenio",
         diasRestantesConvenio: inst ? diasRestantesConvenio(inst.fecha_fin) : null,
         ocupadas: ocupadosPorPlaza[p.id_plaza] || 0,

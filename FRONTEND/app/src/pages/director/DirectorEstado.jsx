@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { usePracticasDirector } from "../../hooks/usePracticasDirector";
 import { formatearFecha, formatearHoras, textoEstadoPractica } from "../../utils/formato";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
 import ModalResultadoPractica from "../../components/ModalResultadoPractica";
+import Cargando from "../../components/Cargando";
 
 const ESTADOS = ["pendiente", "en_curso", "finalizada", "aprobada", "rechazada"];
 
@@ -23,7 +25,9 @@ export default function DirectorEstado() {
   const { practicas, cargando, recargar } = usePracticasDirector();
   const [fInstitucion, setFInstitucion] = useState("");
   const [fDocente, setFDocente] = useState("");
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState("Todas");
+  // El Inicio del Director puede abrir esta página ya filtrada (ej. "en_curso").
+  const location = useLocation();
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState(location.state?.estado || "Todas");
   const [practicaAbierta, setPracticaAbierta] = useState(null);
   const [practicaPorDecidir, setPracticaPorDecidir] = useState(null);
 
@@ -36,7 +40,7 @@ export default function DirectorEstado() {
     [practicas]
   );
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   if (practicas.length === 0) {
     return (

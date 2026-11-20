@@ -4,8 +4,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useMiPractica } from "../../hooks/useMiPractica";
 import { obtenerCalificacionesPorAsignacion } from "../../services/practicas";
 import { obtenerRetroalimentacionEstudiante } from "../../services/retroalimentacion";
-import { formatearFecha, formatearHoras, formatearNota, primerNombre } from "../../utils/formato";
+import { formatearFecha, formatearHoras, formatearNota, primerNombre, textoEstadoPractica } from "../../utils/formato";
 import Badge from "../../components/Badge";
+import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/estudiante/EstudianteInicio.jsx
@@ -30,13 +31,22 @@ export default function EstudianteInicio() {
     }
   }, [pr]);
 
-  if (cargando) return <p className="vacio">Cargando…</p>;
+  if (cargando) return <Cargando />;
 
   // Últimas actividades: movimientos reales, más recientes primero (máx. 5).
+  const tituloDe = (idBitacora) => bits.find((b) => String(b._id) === String(idBitacora))?.titulo || "";
   const movimientos = [
-    ...bits.map((b) => ({ fecha: b.fecha, texto: "Registraste la bitácora", detalle: b.titulo })),
-    ...notas.map((n) => ({ fecha: n.fecha, texto: `Nota recibida (${formatearNota(n.nota)})`, detalle: "" })),
-    ...retros.map((r) => ({ fecha: r.fecha, texto: "Retroalimentación recibida", detalle: "" })),
+    ...bits.flatMap((b) => [
+      { fecha: b.fecha, texto: "Registraste la bitácora", detalle: b.titulo },
+      ...(b.estado === "aprobada"
+        ? [{ fecha: b.fecha_revision || b.fecha, texto: "Bitácora aprobada", detalle: b.titulo }]
+        : []),
+      ...(b.estado === "requiere_correccion"
+        ? [{ fecha: b.fecha_revision || b.fecha, texto: "Corrección solicitada", detalle: b.titulo }]
+        : []),
+    ]),
+    ...notas.map((n) => ({ fecha: n.fecha, texto: `Nota recibida (${formatearNota(n.nota)})`, detalle: tituloDe(n.bitacora_id) })),
+    ...retros.map((r) => ({ fecha: r.fecha, texto: "Retroalimentación recibida", detalle: tituloDe(r.bitacora_id) })),
   ]
     .filter((m) => m.fecha)
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
@@ -55,7 +65,7 @@ export default function EstudianteInicio() {
       <div className="cards">
         <TarjetaResumen
           titulo="Práctica asignada"
-          numero={pr ? <Badge estado={pr.estado} /> : "Sin asignar"}
+          numero={pr ? <Badge estado={textoEstadoPractica(pr.estado)} /> : "Sin asignar"}
           info="Estado de tu práctica en la institución receptora."
           sub={pr?.institucion}
           enlace="Ver práctica"

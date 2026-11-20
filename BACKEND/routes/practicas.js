@@ -903,7 +903,7 @@ router.get("/estudiantes-docente/:idDocente", async (req, res) => {
 
         const planes = await practicas.query(`
             SELECT e.id_estudiante, ap.id_asignacion, ap.id_grupo, ap.plaza_id,
-                   ap.horas_requeridas, ap.estado, i.nombre AS institucion
+                   ap.fecha_inicio, ap.fecha_fin, ap.horas_requeridas, ap.estado, i.nombre AS institucion
             FROM unnest($1::int[]) AS e(id_estudiante)
             LEFT JOIN LATERAL (
                 SELECT * FROM asignacion_plaza

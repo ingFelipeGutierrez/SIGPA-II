@@ -3,12 +3,17 @@ import { obtenerPracticasCompletas, obtenerCalificacionesBitacora } from "../../
 import { obtenerTodasLasBitacoras } from "../../services/bitacoras";
 import { obtenerReporteConvenios } from "../../services/reportes";
 import { construirReporte, TIPOS_REPORTE } from "../../utils/reportes";
+import { exportarReporte } from "../../utils/exportarReporte";
 import { formatearFecha } from "../../utils/formato";
+import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../components/ToastContext";
+import Modal from "../../components/Modal";
 import Cargando from "../../components/Cargando";
 
 /**
  * src/pages/director/DirectorReportes.jsx
- * Página "Reportes" (CU 4 — Generar reportes e indicadores): formulario con
+ * Página "Reportes" (CU 4 — Generar reportes e indicadores y CU 5 —
+ * Exportar reporte a PDF/Excel): formulario con
  * tipo de reporte y periodo, validación del rango de fechas y, debajo, el
  * reporte generado (título, tarjetas de indicadores y tabla de detalle).
  * No hay historial de reportes (igual que el prototipo). Equivale a
@@ -18,12 +23,16 @@ import Cargando from "../../components/Cargando";
  * refleja lo último) y los cálculos viven en utils/reportes.js.
  */
 export default function DirectorReportes() {
+  const { usuario } = useAuth();
+  const { mostrarToast } = useToast();
   const [tipo, setTipo] = useState(TIPOS_REPORTE[0]);
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [error, setError] = useState("");
   const [generando, setGenerando] = useState(false);
   const [reporte, setReporte] = useState(null); // { ...reporte, desde, hasta }
+  const [exportando, setExportando] = useState(false); // ventana "Exportar reporte" abierta
+  const [formato, setFormato] = useState("pdf");
 
   /** Valida el periodo, trae los datos y construye el reporte. */
   const generar = async () => {
@@ -48,6 +57,18 @@ export default function DirectorReportes() {
       setError(e.message || "No se pudo generar el reporte. Intenta nuevamente.");
     } finally {
       setGenerando(false);
+    }
+  };
+
+  /** CU 5: genera el/los archivos; cancelar el cuadro "Guardar como" no es un error. */
+  const exportar = async () => {
+    setExportando(false);
+    try {
+      await exportarReporte(formato, reporte, `${usuario.nombre} ${usuario.apellido}`);
+      mostrarToast("Reporte exportado correctamente.", "ok");
+    } catch (e) {
+      if (e && e.name === "AbortError") mostrarToast("Exportación cancelada.", "info");
+      else mostrarToast("No se pudo generar el archivo. Intenta nuevamente.", "error");
     }
   };
 
@@ -87,6 +108,7 @@ export default function DirectorReportes() {
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
             <h3>{reporte.titulo} · {formatearFecha(reporte.desde)} a {formatearFecha(reporte.hasta)}</h3>
+            <button className="button-primary" onClick={() => setExportando(true)}>Exportar</button>
           </div>
           <div className="cards">
             {reporte.indicadores.map(([titulo, valor]) => (
@@ -110,6 +132,28 @@ export default function DirectorReportes() {
           </div>
         </div>
       ))}
+
+      {exportando && (
+        <Modal
+          titulo="Exportar reporte"
+          onClose={() => setExportando(false)}
+          pie={
+            <>
+              <button className="button-secondary" data-cerrar>Cancelar</button>
+              <button className="button-primary" onClick={exportar}>Exportar</button>
+            </>
+          }
+        >
+          <div className="form-group">
+            <label htmlFor="exp-formato">Formato</label>
+            <select id="exp-formato" value={formato} onChange={(e) => setFormato(e.target.value)}>
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+              <option value="ambos">Ambos</option>
+            </select>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

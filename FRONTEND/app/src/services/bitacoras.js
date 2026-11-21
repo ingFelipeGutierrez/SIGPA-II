@@ -30,3 +30,7 @@ export const obtenerBitacorasDocente = (idDocente) =>
  *  panel del Director en "Horas del estudiante", CU 6). */
 export const obtenerBitacorasPorAsignacion = (idAsignacion) =>
   apiGet(`${BASE}/docente/${idAsignacion}`);
+
+/** Todas las bitácoras de todos los estudiantes (solo lectura). Usado por
+ *  "Reportes" (CU 4) del panel del Director. */
+export const obtenerTodasLasBitacoras = () => apiGet(BASE);

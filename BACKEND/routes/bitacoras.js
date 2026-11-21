@@ -29,6 +29,20 @@ router.post("/", async (req, res) => {
     } catch (error) { console.error(error); res.status(500).json({ error: "Error al crear la bitácora" }); }
 });
 
+/**
+ * GET /api/bitacoras
+ * Todas las bitácoras (solo lectura). Lo usa el panel del Director en
+ * "Reportes" (CU 4), que calcula los reportes cruzando estas bitácoras
+ * con las prácticas de ms_practicas en el navegador.
+ */
+router.get("/", async (req, res) => {
+    try {
+        const db = getDb();
+        const bits = await db.collection("bitacora").find({}).sort({ fecha: -1 }).toArray();
+        res.json(bits);
+    } catch (error) { console.error(error); res.status(500).json({ error: "Error al consultar las bitácoras" }); }
+});
+
 router.get("/estudiante/:id", async (req, res) => {
     try {
         const db = getDb();

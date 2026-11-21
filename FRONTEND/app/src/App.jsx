@@ -18,6 +18,7 @@ import DirectorInstituciones from "./pages/director/DirectorInstituciones";
 import DirectorEstado from "./pages/director/DirectorEstado";
 import DirectorSupervision from "./pages/director/DirectorSupervision";
 import DirectorInicio from "./pages/director/DirectorInicio";
+import DirectorReportes from "./pages/director/DirectorReportes";
 import { useAuth } from "./context/AuthContext";
 
 /**
@@ -58,7 +59,7 @@ export default function App() {
         <Route path="instituciones" element={<DirectorInstituciones />} />
         <Route path="estado" element={<DirectorEstado />} />
         <Route path="supervision" element={<DirectorSupervision />} />
-        <Route path="reportes" element={<PaginaPendiente titulo="Reportes" />} />
+        <Route path="reportes" element={<DirectorReportes />} />
       </Route>
 
       {/* Panel de Admin: pendiente de construir. */}
@@ -116,16 +117,6 @@ function PanelDirector() {
         { icono: "📈", etiqueta: "Reportes", ruta: "reportes" },
       ]}
     />
-  );
-}
-
-/** Página de una sección del panel del Director aún en construcción. */
-function PaginaPendiente({ titulo }) {
-  return (
-    <div className="page">
-      <div className="page-title"><h1>{titulo}</h1></div>
-      <div className="card vacio">Esta sección está en construcción. Vuelve pronto.</div>
-    </div>
   );
 }
 

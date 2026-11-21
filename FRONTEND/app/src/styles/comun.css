@@ -711,3 +711,10 @@ body.menu-abierto::after { animation: aparecer var(--t-normal) ease-out; }
 }
 .cargando-dino { font-size: 26px; animation: dino-salta 0.9s var(--ease) infinite; }
 @keyframes dino-salta { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* =========================================================
+   14. LOGIN: separador "o" y botón de Google
+========================================================= */
+.login-separador { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--gris-texto); font-size: 12px; }
+.login-separador::before, .login-separador::after { content: ""; flex: 1; height: 1px; background-color: var(--borde); }
+.login-google { display: flex; justify-content: center; }

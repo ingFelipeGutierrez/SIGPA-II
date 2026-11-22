@@ -228,6 +228,6 @@ En `UML/CASOS DE USO Y DIAGRAMA DE CASOS DE USO/` están los casos de uso detall
 
 ---
 
-## Autor
+## Autores
 
-Felipe Gutiérrez — Ingeniería de Sistemas, Universidad de Investigación y Desarrollo (UDI).
+Felipe Gutiérrez, Jorge Saldaña, Sharon Pérez — Ingeniería de Sistemas, Universidad de Investigación y Desarrollo (UDI).

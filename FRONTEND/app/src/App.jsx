@@ -19,6 +19,9 @@ import DirectorEstado from "./pages/director/DirectorEstado";
 import DirectorSupervision from "./pages/director/DirectorSupervision";
 import DirectorInicio from "./pages/director/DirectorInicio";
 import DirectorReportes from "./pages/director/DirectorReportes";
+import AdminInicio from "./pages/admin/AdminInicio";
+import AdminSolicitudes from "./pages/admin/AdminSolicitudes";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import { useAuth } from "./context/AuthContext";
 
 /**
@@ -26,8 +29,8 @@ import { useAuth } from "./context/AuthContext";
  * Define las rutas de toda la aplicación. El panel de cada rol vive bajo
  * su propio PanelLayout (menú lateral + topbar propios de ese rol);
  * dentro de /estudiante, cada página hija se renderiza en el <Outlet/>
- * del layout. Los paneles de Docente, Director y Admin se agregan aquí
- * mismo a medida que se van construyendo.
+ * del layout. Los cuatro paneles (Estudiante, Docente, Director
+ * y Super Admin) están definidos aquí.
  */
 export default function App() {
   return (
@@ -62,8 +65,11 @@ export default function App() {
         <Route path="reportes" element={<DirectorReportes />} />
       </Route>
 
-      {/* Panel de Admin: pendiente de construir. */}
-      <Route path="/admin/*" element={<PanelProvisional titulo="Panel Super Admin" />} />
+      <Route path="/admin" element={<RutaPrivada rol="ADMIN_SISTEMA"><PanelAdmin /></RutaPrivada>}>
+        <Route index element={<AdminInicio />} />
+        <Route path="solicitudes" element={<AdminSolicitudes />} />
+        <Route path="usuarios" element={<AdminUsuarios />} />
+      </Route>
     </Routes>
   );
 }
@@ -120,21 +126,26 @@ function PanelDirector() {
   );
 }
 
+/** Menú lateral del panel del Super Admin (solicitudes de registro y usuarios). */
+function PanelAdmin() {
+  return (
+    <PanelLayout
+      titulo="Panel Super Admin"
+      rolClase="rol-admin"
+      rolEtiqueta="Super Admin"
+      menu={[
+        { icono: "🏠", etiqueta: "Inicio", ruta: "" },
+        { icono: "📨", etiqueta: "Solicitudes de registro", ruta: "solicitudes" },
+        { icono: "👥", etiqueta: "Usuarios", ruta: "usuarios" },
+      ]}
+    />
+  );
+}
+
 /** Evita que alguien entre a un panel sin sesión, o con el rol equivocado. */
 function RutaPrivada({ rol, children }) {
   const { usuario } = useAuth();
   if (!usuario) return <Navigate to="/" replace />;
   if (rol && usuario.rol !== rol) return <Navigate to="/" replace />;
   return children;
-}
-
-function PanelProvisional({ titulo }) {
-  const { usuario, cerrarSesion } = useAuth();
-  return (
-    <div style={{ padding: 24 }}>
-      <h2>{titulo}</h2>
-      <p>Hola, {usuario?.nombre} {usuario?.apellido} ({usuario?.rol})</p>
-      <button onClick={cerrarSesion}>Cerrar sesión</button>
-    </div>
-  );
 }

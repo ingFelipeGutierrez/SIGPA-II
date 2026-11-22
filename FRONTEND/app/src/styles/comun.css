@@ -60,6 +60,7 @@ a { color: var(--acento); }
 body.rol-estudiante { --acento: #2864c7; }  /* azul   */
 body.rol-docente    { --acento: #1f9d63; }  /* verde  */
 body.rol-director   { --acento: #c9820f; }  /* dorado */
+body.rol-admin      { --acento: #7c3aed; }  /* morado */
 
 
 /* =========================================================
